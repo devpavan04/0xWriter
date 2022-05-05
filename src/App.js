@@ -1,25 +1,32 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from 'react';
+import { Page, Text, Tabs, Spacer, Grid } from '@geist-ui/core';
+import { Home } from './components/home';
+import { Posts } from './components/posts';
 
-function App() {
+const App = () => {
+  const [connected, setConnected] = useState(false);
+
+  const handleConnected = (connection) => {
+    setConnected(connection);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ width: '1000px', margin: 'auto' }}>
+      <Text h2 mt='2' mb='0' style={{ textAlign: 'center' }}>
+        .posts
+      </Text>
+      <Tabs initialValue='1' mt='1'>
+        <Tabs.Item label='Home' value='1'>
+          <Home handleConnected={handleConnected} />
+        </Tabs.Item>
+        {connected ? (
+          <Tabs.Item label='My Posts' value='2'>
+            <Posts />
+          </Tabs.Item>
+        ) : null}
+      </Tabs>
     </div>
   );
-}
+};
 
 export default App;
