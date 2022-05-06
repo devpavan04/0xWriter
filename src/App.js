@@ -4,10 +4,15 @@ import { Home } from './components/home';
 import { Posts } from './components/posts';
 
 const App = () => {
+  const [connection, setConnection] = useState();
   const [connected, setConnected] = useState(false);
 
-  const handleConnected = (connection) => {
-    setConnected(connection);
+  const handleConnection = (connection) => {
+    setConnection(connection);
+  };
+
+  const handleConnected = (connected) => {
+    setConnected(connected);
   };
 
   return (
@@ -17,7 +22,12 @@ const App = () => {
       </Text>
       <Tabs initialValue='1' mt='1'>
         <Tabs.Item label='Home' value='1'>
-          <Home handleConnected={handleConnected} />
+          <Home
+            connected={connected}
+            connection={connection}
+            handleConnected={handleConnected}
+            handleConnection={handleConnection}
+          />
         </Tabs.Item>
         {connected ? (
           <Tabs.Item label='My Posts' value='2'>

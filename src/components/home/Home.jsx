@@ -2,7 +2,20 @@ import { useState, useEffect, useCallback } from 'react';
 import Web3Modal from 'web3modal';
 import WalletConnectProvider from '@walletconnect/web3-provider';
 import { ethers } from 'ethers';
+
+// AUTHENTICATION
+import { CeramicClient } from '@ceramicnetwork/http-client';
+import { IDX } from '@ceramicstudio/idx';
+import { DID } from 'dids';
+import { getResolver as getKeyResolver } from 'key-did-resolver';
+import { getResolver as get3IDResolver } from '@ceramicnetwork/3id-did-resolver';
+import { EthereumAuthProvider, ThreeIdConnect } from '@3id/connect';
+
 import { Card, Button, Spacer, Divider, Text, Note } from '@geist-ui/core';
+
+const threeID = new ThreeIdConnect();
+
+const CERAMIC_URL = 'http://localhost:7007';
 
 const web3Modal = new Web3Modal({
   cacheProvider: true,
@@ -28,11 +41,10 @@ const switchAccount = async () => {
   });
 };
 
-export const Home = ({ handleConnected }) => {
+export const Home = ({ connected, connection, handleConnection, handleConnected }) => {
   const [injectedProvider, setInjectedProvider] = useState();
   const [signer, setSigner] = useState();
   const [account, setAccount] = useState({ address: '', balance: '', chainId: '' });
-  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     function init() {
@@ -43,11 +55,37 @@ export const Home = ({ handleConnected }) => {
     init();
   }, []);
 
+  const authenticateWithEthereum = async (provider, injectedProvider, address) => {
+    const authProvider = new EthereumAuthProvider(provider, address);
+    await threeID.connect(authProvider);
+    const ceramic = new CeramicClient(CERAMIC_URL);
+    const did = new DID({
+      // Get the DID provider from the 3ID Connect instance
+      provider: threeID.getDidProvider(),
+      resolver: {
+        ...get3IDResolver(ceramic),
+        ...getKeyResolver(),
+      },
+    });
+    await did.authenticate();
+    ceramic.did = did;
+    const idx = new IDX({ ceramic });
+    const connection = {
+      provider: provider,
+      injectedProvider: injectedProvider,
+      ceramicInstance: ceramic,
+      idxInstance: idx,
+    };
+    console.log(await idx.get('basicProfile'));
+    handleConnection(connection);
+    handleConnected(true);
+  };
+
   const connectWallet = useCallback(async () => {
-    const instance = await web3Modal.connect();
-    const provider = new ethers.providers.Web3Provider(instance);
-    setInjectedProvider(provider);
-    const signer = provider.getSigner();
+    const provider = await web3Modal.connect();
+    const injectedProvider = new ethers.providers.Web3Provider(provider);
+    setInjectedProvider(injectedProvider);
+    const signer = injectedProvider.getSigner();
     const address = await signer.getAddress();
     const balance = ethers.utils.formatEther(await signer.getBalance()) + ' ETH';
     const chainId = await signer.getChainId();
@@ -57,14 +95,12 @@ export const Home = ({ handleConnected }) => {
       chainId,
     };
     setAccount(account);
-    setConnected(true);
-    handleConnected(true);
-  }, [signer]);
+    await authenticateWithEthereum(provider, injectedProvider, address);
+  }, []);
 
   const disconectWallet = async () => {
     await web3Modal.clearCachedProvider();
     setTimeout(() => {
-      setConnected(false);
       handleConnected(false);
       window.location.reload();
     }, 1);
