@@ -1,0 +1,20 @@
+.walletContent,
+.basicProfileNotFound,
+.basicProfileContent {
+  display: flex;
+  align-items: center;
+}
+
+.address {
+  display: flex;
+  align-items: center;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+}
+
+.modalContent {
+  text-align: left;
+}

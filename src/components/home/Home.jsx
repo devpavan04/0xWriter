@@ -1,174 +1,158 @@
-import { useState, useEffect, useCallback } from 'react';
-import Web3Modal from 'web3modal';
-import WalletConnectProvider from '@walletconnect/web3-provider';
-import { ethers } from 'ethers';
+import { useState, useEffect } from 'react';
+import Identicon from 'react-identicons';
+import './home.css';
+import {
+  Card,
+  Button,
+  Spacer,
+  Divider,
+  Text,
+  useToasts,
+  Spinner,
+  Tag,
+  Description,
+  Modal,
+  useModal,
+  Input,
+} from '@geist-ui/core';
 
-// AUTHENTICATION
-import { CeramicClient } from '@ceramicnetwork/http-client';
-import { IDX } from '@ceramicstudio/idx';
-import { DID } from 'dids';
-import { getResolver as getKeyResolver } from 'key-did-resolver';
-import { getResolver as get3IDResolver } from '@ceramicnetwork/3id-did-resolver';
-import { EthereumAuthProvider, ThreeIdConnect } from '@3id/connect';
+export const Home = ({ address, balance, chainId, authenticated, basicProfile, idx }) => {
+  const { setToast } = useToasts({ placement: 'topRight', padding: '1rem' });
+  const { setVisible, bindings } = useModal();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
 
-import { Card, Button, Spacer, Divider, Text, Note } from '@geist-ui/core';
-
-const threeID = new ThreeIdConnect();
-
-const CERAMIC_URL = 'http://localhost:7007';
-
-const web3Modal = new Web3Modal({
-  cacheProvider: true,
-  providerOptions: {
-    walletconnect: {
-      package: WalletConnectProvider,
-      options: {
-        infuraId: process.env.REACT_APP_INFURA_API_KEY,
-      },
-    },
-  },
-  theme: 'dark',
-});
-
-const switchAccount = async () => {
-  await window.ethereum.request({
-    method: 'wallet_requestPermissions',
-    params: [
-      {
-        eth_accounts: {},
-      },
-    ],
-  });
-};
-
-export const Home = ({ connected, connection, handleConnection, handleConnected }) => {
-  const [injectedProvider, setInjectedProvider] = useState();
-  const [signer, setSigner] = useState();
-  const [account, setAccount] = useState({ address: '', balance: '', chainId: '' });
-
-  useEffect(() => {
-    function init() {
-      if (web3Modal.cachedProvider) {
-        connectWallet();
+  const updateBasicProfile = async () => {
+    if (name === '') {
+      toastMessage('warning', 'Please enter name.');
+    } else if (description === '') {
+      toastMessage('warning', 'Please enter description.');
+    } else {
+      toastMessage('secondary', 'Updating Basic Profile...');
+      try {
+        await idx.set('basicProfile', {
+          name,
+          description,
+        });
+        toastMessage('success', 'Basic Profile successfully updated.');
+        toastMessage('secondary', 'Loading...');
+      } catch (e) {
+        toastMessage('error', 'Updating Basic Profile failed.');
       }
+      setName('');
+      setDescription('');
+      setVisible(false);
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     }
-    init();
-  }, []);
-
-  const authenticateWithEthereum = async (provider, injectedProvider, address) => {
-    const authProvider = new EthereumAuthProvider(provider, address);
-    await threeID.connect(authProvider);
-    const ceramic = new CeramicClient(CERAMIC_URL);
-    const did = new DID({
-      // Get the DID provider from the 3ID Connect instance
-      provider: threeID.getDidProvider(),
-      resolver: {
-        ...get3IDResolver(ceramic),
-        ...getKeyResolver(),
-      },
-    });
-    await did.authenticate();
-    ceramic.did = did;
-    const idx = new IDX({ ceramic });
-    const connection = {
-      provider: provider,
-      injectedProvider: injectedProvider,
-      ceramicInstance: ceramic,
-      idxInstance: idx,
-    };
-    console.log(await idx.get('basicProfile'));
-    handleConnection(connection);
-    handleConnected(true);
   };
 
-  const connectWallet = useCallback(async () => {
-    const provider = await web3Modal.connect();
-    const injectedProvider = new ethers.providers.Web3Provider(provider);
-    setInjectedProvider(injectedProvider);
-    const signer = injectedProvider.getSigner();
-    const address = await signer.getAddress();
-    const balance = ethers.utils.formatEther(await signer.getBalance()) + ' ETH';
-    const chainId = await signer.getChainId();
-    const account = {
-      address,
-      balance,
-      chainId,
-    };
-    setAccount(account);
-    await authenticateWithEthereum(provider, injectedProvider, address);
-  }, []);
+  const renderUpdateBasicProfileModal = () => {
+    return (
+      <Modal {...bindings}>
+        <div className='modalContent'>
+          <Input clearable label='Name' onChange={(e) => setName(e.target.value)} width='100%' />
+          <Spacer />
+          <Input clearable label='Description' onChange={(e) => setDescription(e.target.value)} width='100%' />
+          <Spacer />
+          <Button type='secondary' ghost auto onClick={updateBasicProfile}>
+            Update Profile
+          </Button>
+        </div>
+      </Modal>
+    );
+  };
 
-  const disconectWallet = async () => {
-    await web3Modal.clearCachedProvider();
-    setTimeout(() => {
-      handleConnected(false);
-      window.location.reload();
-    }, 1);
+  const toastMessage = (type, message) => {
+    setToast({ type: type, text: message, delay: 2000 });
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '4fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-      <div>
-        {!connected ? (
-          <Note label={false}>
-            <Text b>Welcome to Posts 👋</Text>
-            <Text>Connect your wallet to get started!</Text>
-          </Note>
-        ) : (
-          <Card>
-            <Card.Content>
-              <Text b>Account</Text>
-            </Card.Content>
-            <Divider />
-            <Card.Content>
-              <div>
-                <Text>{account.address}</Text>
-                <Text>{account.balance}</Text>
-                <Text>{account.chainId}</Text>
+    <div className='homeContent'>
+      <div className='wallet'>
+        <Card>
+          <Card.Content>
+            <Text b>Wallet</Text>
+          </Card.Content>
+          <Divider />
+          <Card.Content>
+            <div className='walletContent'>
+              <div className='address'>
+                <Identicon string={address} size='30' />
+                <Spacer />
+                <Description
+                  title='Address'
+                  content={address.substr(0, 5) + '...' + address.slice(address.length - 5)}
+                />
               </div>
-            </Card.Content>
-          </Card>
-        )}
+              <Spacer w={8} />
+              <Description title='Balance' content={`${balance} ETH`} />
+              <Spacer w={8} />
+              <Description
+                title='Network'
+                content={
+                  <Tag type='lite'>
+                    {chainId === 1
+                      ? 'Mainnet'
+                      : chainId === 3
+                      ? 'Ropsten'
+                      : chainId === 4
+                      ? 'Rinkeby'
+                      : chainId === 42
+                      ? 'Kovan'
+                      : ''}
+                  </Tag>
+                }
+              />
+            </div>
+          </Card.Content>
+        </Card>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        {!connected ? (
-          <Button type='secondary' onClick={connectWallet}>
-            Connect Wallet
-          </Button>
-        ) : (
-          <>
-            <Button type='secondary' onClick={disconectWallet}>
-              Disconnect Wallet
-            </Button>
-            <Spacer />
-            <Button type='secondary' ghost onClick={switchAccount}>
-              Switch Account
-            </Button>
-          </>
-        )}
+      <Spacer h={2} />
+      <div className='basicProfile'>
+        <Card>
+          <Card.Content>
+            <Text b>Basic Profile</Text>
+          </Card.Content>
+          <Divider />
+          <Card.Content>
+            {!authenticated ? (
+              <div className='loader'>
+                <p>Authenticating DID</p>
+                <Spacer />
+                <Spinner />
+              </div>
+            ) : basicProfile === undefined ? (
+              <div className='loader'>
+                <p>Fetching Basic Profile</p>
+                <Spacer />
+                <Spinner />
+              </div>
+            ) : basicProfile === null ? (
+              <div className='basicProfileNotFound'>
+                <p>Basic Profile is not found, update now!?</p>
+                <Spacer w={4} />
+                <Button type='secondary' ghost auto onClick={() => setVisible(true)}>
+                  Update Profile
+                </Button>
+                {renderUpdateBasicProfileModal()}
+              </div>
+            ) : (
+              <div className='basicProfileContent'>
+                <Description title='Name' content={basicProfile.name} />
+                <Spacer w={8} />
+                <Description title='Description' content={basicProfile.description} />
+                <Spacer w={8} />
+                <Button type='secondary' ghost auto onClick={() => setVisible(true)}>
+                  Update Profile
+                </Button>
+                {renderUpdateBasicProfileModal()}
+              </div>
+            )}
+          </Card.Content>
+        </Card>
       </div>
     </div>
   );
 };
-
-window.ethereum &&
-  window.ethereum.on('chainChanged', (chainId) => {
-    web3Modal.cachedProvider &&
-      setTimeout(() => {
-        window.location.reload();
-      }, 1);
-  });
-
-window.ethereum &&
-  window.ethereum.on('accountsChanged', async (accounts) => {
-    if (accounts.length === 0) {
-      await web3Modal.clearCachedProvider();
-      setTimeout(() => {
-        window.location.reload();
-      }, 1);
-    }
-    web3Modal.cachedProvider &&
-      setTimeout(() => {
-        window.location.reload();
-      }, 1);
-  });

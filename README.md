@@ -1,2 +1,2 @@
-# Posts
-Stream Lit Posts!
+# Stories
+Stream Lit Stories!
