@@ -1,49 +1,11 @@
 {
-  "name": "creator",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@3id/connect": "^0.4.1",
-    "@ceramicnetwork/3id-did-resolver": "^2.0.0",
-    "@ceramicnetwork/http-client": "^2.0.0",
-    "@ceramicstudio/idx": "^0.12.2",
-    "@editorjs/delimiter": "^1.2.0",
-    "@editorjs/editorjs": "^2.24.3",
-    "@editorjs/header": "^2.6.2",
-    "@editorjs/marker": "^1.2.2",
-    "@geist-ui/core": "^2.3.8",
-    "@geist-ui/icons": "^1.0.2",
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.2.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@walletconnect/web3-provider": "^1.7.8",
-    "ethers": "^5.6.5",
-    "key-did-resolver": "^2.0.0",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
-    "react-identicons": "^1.2.5",
-    "react-scripts": "^4.0.3",
-    "web-vitals": "^2.1.4",
-    "web3modal": "^1.9.7"
-  },
-  "scripts": {
-    "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
-    "eject": "react-app-rewired eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not op_mini all"
-  ],
+  "name": "hardhat-project",
   "devDependencies": {
-    "react-app-rewired": "^2.2.1"
+    "@nomiclabs/hardhat-ethers": "^2.0.6",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "chai": "^4.3.6",
+    "ethereum-waffle": "^3.4.4",
+    "ethers": "^5.6.7",
+    "hardhat": "^2.9.6"
   }
 }
