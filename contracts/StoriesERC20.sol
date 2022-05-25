@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.4;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./StoriesOwnable.sol";
+
+contract StoriesERC20 is ERC20, StoriesOwnable {
+    uint256 private tokenPrice;
+
+    constructor(
+        string memory _tokenName,
+        string memory _tokenSymbol,
+        uint256 _tokenPrice,
+        address _owner
+    ) ERC20(_tokenName, _tokenSymbol) StoriesOwnable(_owner) {
+        tokenPrice = _tokenPrice;
+    }
+
+    receive() external payable {}
+
+    // getters
+    function getBalance() public view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function getTokenPrice() public view returns (uint256) {
+        return tokenPrice;
+    }
+
+    // setters
+    function setTokenPrice(uint256 _newTokenPrice) public onlyOwner {
+        tokenPrice = _newTokenPrice;
+    }
+
+    // main
+    function mint(uint256 _amount) public payable {
+        uint256 totalTokenPrice = tokenPrice * _amount;
+        require(
+            msg.value == totalTokenPrice,
+            "Should pay the total token price."
+        );
+        _mint(msg.sender, _amount);
+    }
+
+    function mintForOwner(uint256 _amount) public onlyOwner {
+        _mint(msg.sender, _amount);
+    }
+}
