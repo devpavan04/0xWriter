@@ -5,61 +5,61 @@ import "./StoriesERC20.sol";
 import "./StoriesOwnable.sol";
 
 contract Stories is StoriesOwnable {
-    uint256 private platformFee;
+    uint256 private deploymentFee;
 
-    mapping(address => bool) private hasDeployed;
-    mapping(address => address) private deployedContractAddress;
+    mapping(address => bool) private hasWriterDeployed;
+    mapping(address => address) private writerDeployedContractAddress;
 
-    Deployer[] private deployers;
+    Writer[] private writers;
 
-    struct Deployer {
-        address deployerdAddress;
-        string deployerDID;
-        address deployedContractAddress;
+    struct Writer {
+        address writerAddress;
+        string writerDID;
+        address writerDeployedContractAddress;
     }
 
-    event LogNewPlatformFee(uint256 indexed newPlatformFee);
+    event LogNewDeploymentFee(uint256 indexed newDeploymentFee);
     event LogNewDeployment(
-        address indexed deployerdAddress,
-        string indexed deployerDID,
-        address indexed deployedContractAddress
+        address indexed writerAddress,
+        string indexed writerDID,
+        address indexed writerDeployedContractAddress
     );
 
     receive() external payable {}
 
-    constructor(uint256 _platformFee, address _owner) StoriesOwnable(_owner) {
-        platformFee = _platformFee;
+    constructor(uint256 _deploymentFee, address _owner) StoriesOwnable(_owner) {
+        deploymentFee = _deploymentFee;
     }
 
     // getters
-    function getBalance() public view returns (uint256) {
+    function getContractBalance() public view returns (uint256) {
         return address(this).balance;
     }
 
-    function getPlatformFee() public view returns (uint256) {
-        return platformFee;
+    function getDeploymentFee() public view returns (uint256) {
+        return deploymentFee;
     }
 
-    function getHasDeployed(address _address) public view returns (bool) {
-        return hasDeployed[_address];
+    function getHasWriterDeployed(address _address) public view returns (bool) {
+        return hasWriterDeployed[_address];
     }
 
-    function getDeployedContractAddress(address _address)
+    function getWriterDeployedContractAddress(address _address)
         public
         view
         returns (address)
     {
-        return deployedContractAddress[_address];
+        return writerDeployedContractAddress[_address];
     }
 
-    function getDeployers() public view returns (Deployer[] memory) {
-        return deployers;
+    function getWriters() public view returns (Writer[] memory) {
+        return writers;
     }
 
     // setters
-    function setPlatformFee(uint256 _newPlatformFee) public onlyOwner {
-        platformFee = _newPlatformFee;
-        emit LogNewPlatformFee(_newPlatformFee);
+    function setDeploymentFee(uint256 _newDeploymentFee) public onlyOwner {
+        deploymentFee = _newDeploymentFee;
+        emit LogNewDeploymentFee(_newDeploymentFee);
     }
 
     // main
@@ -67,20 +67,25 @@ contract Stories is StoriesOwnable {
         string memory _did,
         string memory _tokenName,
         string memory _tokenSymbol,
-        uint256 _tokenPrice
+        uint256 _tokenPrice,
+        uint256 _initialMintTokenAmount
     ) public payable {
-        require(hasDeployed[msg.sender] == false, "Contract already deployed.");
-        require(msg.value == platformFee, "Pay platform fee.");
+        require(
+            hasWriterDeployed[msg.sender] == false,
+            "Contract already deployed by this address."
+        );
+        require(msg.value == deploymentFee, "Pay deployment fee.");
         StoriesERC20 storiesERC20 = new StoriesERC20(
             _tokenName,
             _tokenSymbol,
             _tokenPrice,
+            _initialMintTokenAmount,
             msg.sender
         );
-        address contractAddress = address(storiesERC20);
-        deployers.push(Deployer(msg.sender, _did, contractAddress));
-        deployedContractAddress[msg.sender] = contractAddress;
-        hasDeployed[msg.sender] = true;
-        emit LogNewDeployment(msg.sender, _did, contractAddress);
+        address deployedContractAddress = address(storiesERC20);
+        writers.push(Writer(msg.sender, _did, deployedContractAddress));
+        writerDeployedContractAddress[msg.sender] = deployedContractAddress;
+        hasWriterDeployed[msg.sender] = true;
+        emit LogNewDeployment(msg.sender, _did, deployedContractAddress);
     }
 }

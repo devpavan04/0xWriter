@@ -11,15 +11,17 @@ contract StoriesERC20 is ERC20, StoriesOwnable {
         string memory _tokenName,
         string memory _tokenSymbol,
         uint256 _tokenPrice,
+        uint256 _initialMintTokenAmount,
         address _owner
     ) ERC20(_tokenName, _tokenSymbol) StoriesOwnable(_owner) {
         tokenPrice = _tokenPrice;
+        _mint(_owner, _initialMintTokenAmount);
     }
 
     receive() external payable {}
 
     // getters
-    function getBalance() public view returns (uint256) {
+    function getContractBalance() public view returns (uint256) {
         return address(this).balance;
     }
 
@@ -39,10 +41,6 @@ contract StoriesERC20 is ERC20, StoriesOwnable {
             msg.value == totalTokenPrice,
             "Should pay the total token price."
         );
-        _mint(msg.sender, _amount);
-    }
-
-    function mintForOwner(uint256 _amount) public onlyOwner {
         _mint(msg.sender, _amount);
     }
 }

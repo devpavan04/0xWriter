@@ -6,10 +6,10 @@ const chaiAsPromised = require('chai-as-promised');
 use(solidity);
 use(chaiAsPromised).should();
 
-describe('Stories & StoriesERC20 Test', () => {
+describe('0xStories Contracts Test', () => {
   let stories, storiesERC20DeployedAddress, storiesERC20, acc1, acc2, acc3, acc4;
 
-  describe('⚡ 0xStories flow ⚡', async () => {
+  describe('Testing Stories, StoriesERC20 & StoriesOwnable contracts...', async () => {
     it('Stories: Deployment...', async () => {
       [acc1, acc2, acc3, acc4] = await ethers.getSigners();
 
@@ -23,66 +23,66 @@ describe('Stories & StoriesERC20 Test', () => {
       expect(await stories.owner()).to.equal(acc1.address);
     });
 
-    it('Stories: getPlatformFee()', async () => {
-      expect(await stories.getPlatformFee()).to.equal(ethers.utils.parseEther('2'));
+    it('Stories: getDeploymentFee()', async () => {
+      expect(await stories.getDeploymentFee()).to.equal(ethers.utils.parseEther('2'));
     });
 
     it('StoriesERC20: deployStoriesERC20Contract()', async () => {
       // error
       await stories
         .connect(acc2)
-        .deployStoriesERC20Contract('DID:ACC2', 'ACC2 Token 1', 'ACC2TKN1', ethers.utils.parseEther('1'), {
+        .deployStoriesERC20Contract('DID:ACC2', 'ACC2 Token 1', 'ACC2TKN1', ethers.utils.parseEther('1'), 50, {
           value: ethers.utils.parseEther('1'),
         })
-        .should.be.rejectedWith('Pay platform fee.');
+        .should.be.rejectedWith('Pay deployment fee.');
 
       // success
       await stories
         .connect(acc2)
-        .deployStoriesERC20Contract('DID:ACC2', 'ACC2 Token 1', 'ACC2TKN1', ethers.utils.parseEther('1'), {
+        .deployStoriesERC20Contract('DID:ACC2', 'ACC2 Token 1', 'ACC2TKN1', ethers.utils.parseEther('1'), 50, {
           value: ethers.utils.parseEther('2'),
         });
 
       // error
       await stories
         .connect(acc2)
-        .deployStoriesERC20Contract('DID:ACC2', 'ACC2 Token 2', 'ACC2TKN2', ethers.utils.parseEther('5'), {
+        .deployStoriesERC20Contract('DID:ACC2', 'ACC2 Token 2', 'ACC2TKN2', ethers.utils.parseEther('5'), 50, {
           value: ethers.utils.parseEther('2'),
         })
-        .should.be.rejectedWith('Contract already deployed.');
+        .should.be.rejectedWith('Contract already deployed by this address.');
     });
 
-    it('Stories: getHasDeployed()', async () => {
-      expect(await stories.getHasDeployed(acc2.address)).to.equal(true);
+    it('Stories: getHasWriterDeployed()', async () => {
+      expect(await stories.getHasWriterDeployed(acc2.address)).to.equal(true);
     });
 
-    it('Stories: getBalance()', async () => {
-      expect(await stories.getBalance()).to.equal(ethers.utils.parseEther('2'));
+    it('Stories: getContractBalance()', async () => {
+      expect(await stories.getContractBalance()).to.equal(ethers.utils.parseEther('2'));
     });
 
-    it('Stories: getDeployedContractAddress()', async () => {
-      storiesERC20DeployedAddress = await stories.getDeployedContractAddress(acc2.address);
+    it('Stories: getWriterDeployedContractAddress()', async () => {
+      storiesERC20DeployedAddress = await stories.getWriterDeployedContractAddress(acc2.address);
     });
 
-    it('Stories: getDeployers()', async () => {
-      const deployers = await stories.getDeployers();
+    it('Stories: getWriters()', async () => {
+      const writers = await stories.getWriters();
 
-      expect(deployers[0].deployerdAddress).to.be.equal(acc2.address);
-      expect(deployers[0].deployerDID).to.be.equal('DID:ACC2');
-      expect(deployers[0].deployedContractAddress).to.be.equal(storiesERC20DeployedAddress);
+      expect(writers[0].writerAddress).to.be.equal(acc2.address);
+      expect(writers[0].writerDID).to.be.equal('DID:ACC2');
+      expect(writers[0].writerDeployedContractAddress).to.be.equal(storiesERC20DeployedAddress);
     });
 
-    it('Stories: setPlatformFee()', async () => {
+    it('Stories: setDeploymentFee()', async () => {
       // error
       await stories
         .connect(acc3)
-        .setPlatformFee(ethers.utils.parseEther('4'))
+        .setDeploymentFee(ethers.utils.parseEther('4'))
         .should.be.rejectedWith('Only owner can execute this.');
 
       // success
-      await stories.connect(acc1).setPlatformFee(ethers.utils.parseEther('4'));
+      await stories.connect(acc1).setDeploymentFee(ethers.utils.parseEther('4'));
 
-      expect(await stories.getPlatformFee()).to.be.equal(ethers.utils.parseEther('4'));
+      expect(await stories.getDeploymentFee()).to.be.equal(ethers.utils.parseEther('4'));
     });
 
     it('Stories: transferOwnership()', async () => {
@@ -105,7 +105,7 @@ describe('Stories & StoriesERC20 Test', () => {
       // success
       await stories.connect(acc2).withdrawBalance();
 
-      expect(await stories.getBalance()).to.be.equal(0);
+      expect(await stories.getContractBalance()).to.be.equal(0);
     });
 
     it('StoriesERC20: Create an instance of StoriesERC20 contract deployed by acc2 through Stories contract ...', async () => {
@@ -136,27 +136,17 @@ describe('Stories & StoriesERC20 Test', () => {
       await storiesERC20.connect(acc4).mint(5, { value: ethers.utils.parseEther('5') });
     });
 
-    it('StoriesERC20: getBalance()', async () => {
-      expect(await storiesERC20.getBalance()).to.be.equal(ethers.utils.parseEther('5'));
+    it('StoriesERC20: getContractBalance()', async () => {
+      expect(await storiesERC20.getContractBalance()).to.be.equal(ethers.utils.parseEther('5'));
     });
 
     it('StoriesERC20: balanceOf()', async () => {
+      expect(await storiesERC20.balanceOf(acc2.address)).to.be.equal(50);
       expect(await storiesERC20.balanceOf(acc4.address)).to.be.equal(5);
     });
 
     it('StoriesERC20: totalSupply()', async () => {
-      expect(await storiesERC20.totalSupply()).to.be.equal(5);
-    });
-
-    it('StoriesERC20: mintForOwner()', async () => {
-      // error
-      await storiesERC20.connect(acc4).mintForOwner(100).should.be.rejectedWith('Only owner can execute this.');
-
-      // success
-      await storiesERC20.connect(acc2).mintForOwner(100);
-
-      expect(await storiesERC20.totalSupply()).to.be.equal(105);
-      expect(await storiesERC20.getBalance()).to.be.equal(ethers.utils.parseEther('5'));
+      expect(await storiesERC20.totalSupply()).to.be.equal(55);
     });
 
     it('StoriesERC20: setTokenPrice()', async () => {
@@ -192,7 +182,7 @@ describe('Stories & StoriesERC20 Test', () => {
       // success
       await storiesERC20.connect(acc4).withdrawBalance();
 
-      expect(await storiesERC20.getBalance()).to.be.equal(0);
+      expect(await storiesERC20.getContractBalance()).to.be.equal(0);
     });
   });
 });

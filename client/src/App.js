@@ -88,11 +88,9 @@ const App = () => {
     });
     await did.authenticate();
     ceramic.did = did;
-    // console.log(did._id);
     setCeramic(ceramic);
     const idx = new IDX({ ceramic });
     setIDX(idx);
-    setAuthenticated(true);
     const basicProfile = await idx.get('basicProfile');
     setBasicProfile(basicProfile);
     setAuthenticated(true);
