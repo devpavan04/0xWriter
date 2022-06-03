@@ -21,18 +21,22 @@ export const Home = ({ address, balance, chainId, authenticated, basicProfile, i
   const { setVisible, bindings } = useModal();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [emoji, setEmoji] = useState('');
 
   const updateBasicProfile = async () => {
     if (name === '') {
       toastMessage('warning', 'Please enter name.');
     } else if (description === '') {
       toastMessage('warning', 'Please enter description.');
+    } else if (emoji === '') {
+      toastMessage('warning', 'Please enter emoji.');
     } else {
       toastMessage('secondary', 'Updating Basic Profile...');
       try {
         await idx.set('basicProfile', {
           name,
           description,
+          emoji,
         });
         toastMessage('success', 'Basic Profile successfully updated.');
         toastMessage('secondary', 'Loading...');
@@ -41,6 +45,7 @@ export const Home = ({ address, balance, chainId, authenticated, basicProfile, i
       }
       setName('');
       setDescription('');
+      setEmoji('');
       setVisible(false);
       setTimeout(() => {
         window.location.reload();
@@ -55,6 +60,8 @@ export const Home = ({ address, balance, chainId, authenticated, basicProfile, i
           <Input clearable label='Name' onChange={(e) => setName(e.target.value)} width='100%' />
           <Spacer />
           <Input clearable label='Description' onChange={(e) => setDescription(e.target.value)} width='100%' />
+          <Spacer />
+          <Input clearable label='Emoji' onChange={(e) => setEmoji(e.target.value)} width='100%' />
           <Spacer />
           <Button type='secondary' ghost auto onClick={updateBasicProfile}>
             Update Profile
@@ -131,7 +138,7 @@ export const Home = ({ address, balance, chainId, authenticated, basicProfile, i
               </div>
             ) : basicProfile === null ? (
               <div className='basicProfileNotFound'>
-                <p>Basic Profile is not found, update now!?</p>
+                <p>Basic Profile not found, update now!?</p>
                 <Spacer w={4} />
                 <Button type='secondary' ghost auto onClick={() => setVisible(true)}>
                   Update Profile
@@ -140,11 +147,13 @@ export const Home = ({ address, balance, chainId, authenticated, basicProfile, i
               </div>
             ) : (
               <div className='basicProfileContent'>
-                <Description title='Name' content={basicProfile.name} />
+                <Description title='Name' content={basicProfile.name ? basicProfile.name : '--'} />
                 <Spacer w={8} />
-                <Description title='Description' content={basicProfile.description} />
+                <Description title='Description' content={basicProfile.description ? basicProfile.description : '--'} />
                 <Spacer w={8} />
-                <Button type='secondary' ghost auto onClick={() => setVisible(true)}>
+                <Description title='Emoji' content={basicProfile.emoji ? basicProfile.emoji : '--'} />
+                <Spacer w={8} />
+                <Button className='updateProfileBtn' type='secondary' ghost auto onClick={() => setVisible(true)}>
                   Update Profile
                 </Button>
                 {renderUpdateBasicProfileModal()}

@@ -1,39 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
-import Web3Modal from 'web3modal';
-import WalletConnectProvider from '@walletconnect/web3-provider';
-import { ethers } from 'ethers';
-import { CeramicClient } from '@ceramicnetwork/http-client';
-import { IDX } from '@ceramicstudio/idx';
-import { DID } from 'dids';
-import { getResolver as getKeyResolver } from 'key-did-resolver';
-import { getResolver as get3IDResolver } from '@ceramicnetwork/3id-did-resolver';
-import { EthereumAuthProvider, ThreeIdConnect } from '@3id/connect';
-import { DIDDataStore } from '@glazed/did-datastore';
-import modelAliases from './model/model.json';
+import { web3Modal, connectWallet } from './lib/wallet';
+import { authenticateWithCeramic } from './lib/ceramic';
+
 import './app.css';
+
 import { Button, Text, Note, useToasts, Tabs } from '@geist-ui/core';
 import { Feather } from '@geist-ui/icons';
+
 import { Home } from './components/home';
 import { Write } from './components/write';
 
-const threeID = new ThreeIdConnect();
-const CERAMIC_URL = 'http://localhost:7007';
-
-const web3Modal = new Web3Modal({
-  cacheProvider: true,
-  providerOptions: {
-    walletconnect: {
-      package: WalletConnectProvider,
-      options: {
-        infuraId: process.env.REACT_APP_INFURA_API_KEY,
-      },
-    },
-  },
-  theme: 'dark',
-});
-
 const App = () => {
   const { setToast } = useToasts({ placement: 'topRight', padding: '1rem' });
+  const toastMessage = (type, message) => {
+    setToast({ type: type, text: message, delay: 2000 });
+  };
+
   const [provider, setProvider] = useState();
   const [injectedProvider, setInjectedProvider] = useState();
   const [signer, setSigner] = useState();
@@ -49,64 +31,34 @@ const App = () => {
   useEffect(() => {
     function init() {
       if (web3Modal.cachedProvider) {
-        connectWallet();
+        connectWalletAndAuthenticate();
       }
     }
     init();
   }, []);
 
-  const connectWallet = useCallback(async () => {
+  const connectWalletAndAuthenticate = useCallback(async () => {
     try {
-      const provider = await web3Modal.connect();
+      const { provider, injectedProvider, signer, address, balance, chainId } = await connectWallet();
       setProvider(provider);
-      const injectedProvider = new ethers.providers.Web3Provider(provider);
       setInjectedProvider(injectedProvider);
-      const signer = injectedProvider.getSigner();
       setSigner(signer);
-      const address = await signer.getAddress();
       setAddress(address);
-      const balance = Number(ethers.utils.formatEther(await signer.getBalance())).toFixed(2);
       setBalance(balance);
-      const chainId = await signer.getChainId();
       setChainId(chainId);
+
       setWalletConnected(true);
-      await authenticateWithCeramic(provider, address);
+
+      const { ceramic, idx, basicProfile } = await authenticateWithCeramic(provider, address);
+      setCeramic(ceramic);
+      setIDX(idx);
+      setBasicProfile(basicProfile);
+
+      setAuthenticated(true);
     } catch (e) {
-      console.log(e.message);
-      toastMessage('error', 'Connection failed!');
+      toastMessage('error', e.message);
     }
   }, []);
-
-  const authenticateWithCeramic = async (provider, address) => {
-    const authProvider = new EthereumAuthProvider(provider, address);
-    await threeID.connect(authProvider);
-    const ceramic = new CeramicClient();
-    const did = new DID({
-      provider: threeID.getDidProvider(),
-      resolver: {
-        ...get3IDResolver(ceramic),
-        ...getKeyResolver(),
-      },
-    });
-    await did.authenticate();
-    ceramic.did = did;
-    setCeramic(ceramic);
-
-    // USING IDX
-    const idx = new IDX({ ceramic });
-    setIDX(idx);
-    const basicProfile = await idx.get('basicProfile');
-    setBasicProfile(basicProfile);
-    // USING IDX
-
-    // USING DID Datastore
-    // const store = new DIDDataStore({ ceramic, model: modelAliases });
-    // const basicProfile = await store.get('basicProfile');
-    // console.log(basicProfile);
-    // USING DID Datastore
-
-    setAuthenticated(true);
-  };
 
   const disconectWallet = async () => {
     await web3Modal.clearCachedProvider();
@@ -116,16 +68,12 @@ const App = () => {
     }, 1000);
   };
 
-  const toastMessage = (type, message) => {
-    setToast({ type: type, text: message, delay: 2000 });
-  };
-
   return (
     <div className='wrapper'>
       <div className='header'>
         <div className='heading'>
-          <Feather size={40} />
-          <Text h1>.stories</Text>
+          {/* <Feather size={40} /> */}
+          <Text h1>0xWriter</Text>
         </div>
         <div className='connectButtons'>
           {!walletConnected ? (
@@ -145,7 +93,7 @@ const App = () => {
         {!walletConnected ? (
           <>
             <Note label={false}>
-              <Text b>Welcome to Stories 👋</Text>
+              <Text b>Welcome to 0xWriter 👋</Text>
               <Text>Connect your wallet to get started!</Text>
             </Note>
           </>

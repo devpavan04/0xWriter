@@ -1,2 +1,2 @@
-# 0xStories
-Stream Lit Stories!
+# 0xWriter
+Stream Lit Blog Posts!
