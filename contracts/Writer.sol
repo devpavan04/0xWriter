@@ -1,18 +1,18 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./StoriesERC20.sol";
-import "./StoriesOwnable.sol";
+import "./WriterERC20.sol";
+import "./WriterOwnable.sol";
 
-contract Stories is StoriesOwnable {
+contract Writer is WriterOwnable {
     uint256 private deploymentFee;
 
     mapping(address => bool) private hasWriterDeployed;
     mapping(address => address) private writerDeployedContractAddress;
 
-    Writer[] private writers;
+    Writerr[] private writers;
 
-    struct Writer {
+    struct Writerr {
         address writerAddress;
         string writerDID;
         address writerDeployedContractAddress;
@@ -27,7 +27,7 @@ contract Stories is StoriesOwnable {
 
     receive() external payable {}
 
-    constructor(uint256 _deploymentFee, address _owner) StoriesOwnable(_owner) {
+    constructor(uint256 _deploymentFee, address _owner) WriterOwnable(_owner) {
         deploymentFee = _deploymentFee;
     }
 
@@ -52,7 +52,7 @@ contract Stories is StoriesOwnable {
         return writerDeployedContractAddress[_address];
     }
 
-    function getWriters() public view returns (Writer[] memory) {
+    function getWriters() public view returns (Writerr[] memory) {
         return writers;
     }
 
@@ -63,7 +63,7 @@ contract Stories is StoriesOwnable {
     }
 
     // main
-    function deployStoriesERC20Contract(
+    function deployWriterERC20Contract(
         string memory _did,
         string memory _tokenName,
         string memory _tokenSymbol,
@@ -75,15 +75,15 @@ contract Stories is StoriesOwnable {
             "Contract already deployed by this address."
         );
         require(msg.value == deploymentFee, "Pay deployment fee.");
-        StoriesERC20 storiesERC20 = new StoriesERC20(
+        WriterERC20 writerERC20 = new WriterERC20(
             _tokenName,
             _tokenSymbol,
             _tokenPrice,
             _initialMintTokenAmount,
             msg.sender
         );
-        address deployedContractAddress = address(storiesERC20);
-        writers.push(Writer(msg.sender, _did, deployedContractAddress));
+        address deployedContractAddress = address(writerERC20);
+        writers.push(Writerr(msg.sender, _did, deployedContractAddress));
         writerDeployedContractAddress[msg.sender] = deployedContractAddress;
         hasWriterDeployed[msg.sender] = true;
         emit LogNewDeployment(msg.sender, _did, deployedContractAddress);

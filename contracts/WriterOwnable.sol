@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract StoriesOwnable {
+contract WriterOwnable {
     address public owner;
 
     constructor(address _owner) {

@@ -2,9 +2,9 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "./StoriesOwnable.sol";
+import "./WriterOwnable.sol";
 
-contract StoriesERC20 is ERC20, StoriesOwnable {
+contract WriterERC20 is ERC20, WriterOwnable {
     uint256 private tokenPrice;
 
     constructor(
@@ -13,7 +13,7 @@ contract StoriesERC20 is ERC20, StoriesOwnable {
         uint256 _tokenPrice,
         uint256 _initialMintTokenAmount,
         address _owner
-    ) ERC20(_tokenName, _tokenSymbol) StoriesOwnable(_owner) {
+    ) ERC20(_tokenName, _tokenSymbol) WriterOwnable(_owner) {
         tokenPrice = _tokenPrice;
         _mint(_owner, _initialMintTokenAmount);
     }

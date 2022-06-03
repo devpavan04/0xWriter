@@ -8,6 +8,8 @@ import { DID } from 'dids';
 import { getResolver as getKeyResolver } from 'key-did-resolver';
 import { getResolver as get3IDResolver } from '@ceramicnetwork/3id-did-resolver';
 import { EthereumAuthProvider, ThreeIdConnect } from '@3id/connect';
+import { DIDDataStore } from '@glazed/did-datastore';
+import modelAliases from './model/model.json';
 import './app.css';
 import { Button, Text, Note, useToasts, Tabs } from '@geist-ui/core';
 import { Feather } from '@geist-ui/icons';
@@ -68,14 +70,14 @@ const App = () => {
       const chainId = await signer.getChainId();
       setChainId(chainId);
       setWalletConnected(true);
-      await authenticateWithEthereum(provider, address);
+      await authenticateWithCeramic(provider, address);
     } catch (e) {
       console.log(e.message);
       toastMessage('error', 'Connection failed!');
     }
   }, []);
 
-  const authenticateWithEthereum = async (provider, address) => {
+  const authenticateWithCeramic = async (provider, address) => {
     const authProvider = new EthereumAuthProvider(provider, address);
     await threeID.connect(authProvider);
     const ceramic = new CeramicClient();
@@ -89,10 +91,20 @@ const App = () => {
     await did.authenticate();
     ceramic.did = did;
     setCeramic(ceramic);
+
+    // USING IDX
     const idx = new IDX({ ceramic });
     setIDX(idx);
     const basicProfile = await idx.get('basicProfile');
     setBasicProfile(basicProfile);
+    // USING IDX
+
+    // USING DID Datastore
+    // const store = new DIDDataStore({ ceramic, model: modelAliases });
+    // const basicProfile = await store.get('basicProfile');
+    // console.log(basicProfile);
+    // USING DID Datastore
+
     setAuthenticated(true);
   };
 
