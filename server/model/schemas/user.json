@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "_id": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "deployedContractAddress": {
+      "type": "string"
+    },
+    "subscribedBy": {
+      "type": "array"
+    },
+    "subscribedTo": {
+      "type": "array"
+    }
+  }
+}

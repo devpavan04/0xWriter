@@ -18,6 +18,10 @@ import {
 
 export const Home = ({ address, balance, chainId, authenticated, basicProfile, idx }) => {
   const { setToast } = useToasts({ placement: 'topRight', padding: '1rem' });
+  const toastMessage = (type, message) => {
+    setToast({ type: type, text: message, delay: 6000 });
+  };
+
   const { setVisible, bindings } = useModal();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -69,10 +73,6 @@ export const Home = ({ address, balance, chainId, authenticated, basicProfile, i
         </div>
       </Modal>
     );
-  };
-
-  const toastMessage = (type, message) => {
-    setToast({ type: type, text: message, delay: 2000 });
   };
 
   return (

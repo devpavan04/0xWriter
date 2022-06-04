@@ -13,7 +13,7 @@ import { Write } from './components/write';
 const App = () => {
   const { setToast } = useToasts({ placement: 'topRight', padding: '1rem' });
   const toastMessage = (type, message) => {
-    setToast({ type: type, text: message, delay: 2000 });
+    setToast({ type: type, text: message, delay: 6000 });
   };
 
   const [provider, setProvider] = useState();
