@@ -10,7 +10,7 @@ import modelAliases from '../model/model.json';
 const threeID = new ThreeIdConnect();
 const CERAMIC_URL = 'http://localhost:7007';
 
-export const authenticateWithCeramic = async (provider, address) => {
+export const connectCeramic = async (provider, address) => {
   try {
     const authProvider = new EthereumAuthProvider(provider, address);
     await threeID.connect(authProvider);
@@ -37,13 +37,14 @@ export const authenticateWithCeramic = async (provider, address) => {
     // USING DID Datastore
 
     return {
-      ceramic,
+      ceramicClient: ceramic,
+      did: did._id,
       idx,
       basicProfile,
     };
   } catch (e) {
     console.log(e);
 
-    throw new Error('Authentication with ceramic failed!');
+    throw new Error('Ceramic connection failed!');
   }
 };

@@ -1,88 +1,98 @@
 import { useState, useEffect, useCallback } from 'react';
-import { web3Modal, connectWallet } from './lib/wallet';
-import { authenticateWithCeramic } from './lib/ceramic';
+import { web3Modal, connectWallet, disconectWallet } from './utils/wallet';
+import { connectCeramic } from './utils/ceramic';
+import { connectThreadDB } from './utils/threadDB';
 
 import './app.css';
 
-import { Button, Text, Note, useToasts, Tabs } from '@geist-ui/core';
-import { Feather } from '@geist-ui/icons';
+import { Button, Text, Note, useToasts, Tabs, Loading, Spacer } from '@geist-ui/core';
 
 import { Home } from './components/home';
 import { Write } from './components/write';
 
 const App = () => {
-  const { setToast } = useToasts({ placement: 'topRight', padding: '1rem' });
-  const toastMessage = (type, message) => {
+  const { setToast } = useToasts({ placement: 'bottomRight', padding: '1rem' });
+  const handleMessage = (type, message) => {
     setToast({ type: type, text: message, delay: 6000 });
   };
 
-  const [provider, setProvider] = useState();
-  const [injectedProvider, setInjectedProvider] = useState();
-  const [signer, setSigner] = useState();
-  const [address, setAddress] = useState();
-  const [balance, setBalance] = useState();
-  const [chainId, setChainId] = useState();
+  const [wallet, setWallet] = useState();
   const [walletConnected, setWalletConnected] = useState(false);
   const [ceramic, setCeramic] = useState();
-  const [idx, setIDX] = useState();
-  const [authenticated, setAuthenticated] = useState(false);
-  const [basicProfile, setBasicProfile] = useState();
+  const [ceramicConnected, setCeramicConnected] = useState(false);
+  const [threadDB, setThreadDB] = useState();
+  const [threadDBConnected, setThreadDBConnected] = useState(false);
 
   useEffect(() => {
     function init() {
       if (web3Modal.cachedProvider) {
-        connectWalletAndAuthenticate();
+        connect();
       }
     }
     init();
   }, []);
 
-  const connectWalletAndAuthenticate = useCallback(async () => {
+  const connect = useCallback(async () => {
     try {
       const { provider, injectedProvider, signer, address, balance, chainId } = await connectWallet();
-      setProvider(provider);
-      setInjectedProvider(injectedProvider);
-      setSigner(signer);
-      setAddress(address);
-      setBalance(balance);
-      setChainId(chainId);
-
+      const wallet = {
+        provider,
+        injectedProvider,
+        signer,
+        address,
+        balance,
+        chainId,
+      };
+      setWallet(wallet);
       setWalletConnected(true);
 
-      const { ceramic, idx, basicProfile } = await authenticateWithCeramic(provider, address);
+      const { ceramicClient, did, idx, basicProfile } = await connectCeramic(provider, address);
+      const ceramic = {
+        client: ceramicClient,
+        did,
+        idx,
+        basicProfile,
+      };
       setCeramic(ceramic);
-      setIDX(idx);
-      setBasicProfile(basicProfile);
+      setCeramicConnected(true);
 
-      setAuthenticated(true);
+      const { threadDBClient, threadID } = await connectThreadDB(signer, address);
+      const threadDB = {
+        client: threadDBClient,
+        threadID,
+      };
+      setThreadDB(threadDB);
+      setThreadDBConnected(true);
     } catch (e) {
-      toastMessage('error', e.message);
+      console.log(e);
+
+      handleMessage('error', e.message);
     }
   }, []);
-
-  const disconectWallet = async () => {
-    await web3Modal.clearCachedProvider();
-    setTimeout(() => {
-      setWalletConnected(false);
-      window.location.reload();
-    }, 1000);
-  };
 
   return (
     <div className='wrapper'>
       <div className='header'>
         <div className='heading'>
-          {/* <Feather size={40} /> */}
-          <Text h1>0xWriter</Text>
+          <Text h1 className='gradientText'>
+            0xWriter
+          </Text>
         </div>
         <div className='connectButtons'>
           {!walletConnected ? (
-            <Button type='secondary' auto onClick={connectWallet}>
+            <Button type='secondary' auto onClick={connect}>
               Connect Wallet
             </Button>
           ) : (
             <>
-              <Button type='secondary' auto onClick={disconectWallet}>
+              <Button
+                type='secondary'
+                auto
+                onClick={async () => {
+                  await disconectWallet();
+                  setWalletConnected(false);
+                }}
+              >
                 Disconnect Wallet
               </Button>
             </>
@@ -97,20 +107,23 @@ const App = () => {
               <Text>Connect your wallet to get started!</Text>
             </Note>
           </>
+        ) : !ceramicConnected ? (
+          <Loading type='success' spaceRatio={2.5}>
+            Connecting to ceramic
+          </Loading>
+        ) : !threadDBConnected ? (
+          <Loading type='success' spaceRatio={2.5}>
+            Connecting to textile threadDB
+          </Loading>
         ) : (
           <>
             <Tabs initialValue='1'>
               <Tabs.Item label='Home' value='1'>
-                <Home
-                  address={address}
-                  balance={balance}
-                  chainId={chainId}
-                  authenticated={authenticated}
-                  basicProfile={basicProfile}
-                  idx={idx}
-                />
+                <Spacer />
+                <Home wallet={wallet} ceramic={ceramic} handleMessage={handleMessage} />
               </Tabs.Item>
               <Tabs.Item label='Write' value='2'>
+                <Spacer />
                 <Write />
               </Tabs.Item>
             </Tabs>

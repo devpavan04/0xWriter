@@ -31,3 +31,7 @@ export const connectWallet = async () => {
     throw new Error('Wallet connection failed!');
   }
 };
+
+export const disconectWallet = async () => {
+  await web3Modal.clearCachedProvider();
+};

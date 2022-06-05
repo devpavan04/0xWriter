@@ -16,36 +16,32 @@ import {
   Input,
 } from '@geist-ui/core';
 
-export const Home = ({ address, balance, chainId, authenticated, basicProfile, idx }) => {
-  const { setToast } = useToasts({ placement: 'topRight', padding: '1rem' });
-  const toastMessage = (type, message) => {
-    setToast({ type: type, text: message, delay: 6000 });
-  };
-
+export const Home = ({ wallet, ceramic, handleMessage }) => {
   const { setVisible, bindings } = useModal();
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [emoji, setEmoji] = useState('');
 
   const updateBasicProfile = async () => {
     if (name === '') {
-      toastMessage('warning', 'Please enter name.');
+      handleMessage('warning', 'Please enter name.');
     } else if (description === '') {
-      toastMessage('warning', 'Please enter description.');
+      handleMessage('warning', 'Please enter description.');
     } else if (emoji === '') {
-      toastMessage('warning', 'Please enter emoji.');
+      handleMessage('warning', 'Please enter emoji.');
     } else {
-      toastMessage('secondary', 'Updating Basic Profile...');
+      handleMessage('secondary', 'Updating Basic Profile...');
       try {
-        await idx.set('basicProfile', {
+        await ceramic.idx.set('basicProfile', {
           name,
           description,
           emoji,
         });
-        toastMessage('success', 'Basic Profile successfully updated.');
-        toastMessage('secondary', 'Loading...');
+        handleMessage('success', 'Basic Profile successfully updated.');
+        handleMessage('secondary', 'Loading...');
       } catch (e) {
-        toastMessage('error', 'Updating Basic Profile failed.');
+        handleMessage('error', 'Updating Basic Profile failed.');
       }
       setName('');
       setDescription('');
@@ -86,27 +82,27 @@ export const Home = ({ address, balance, chainId, authenticated, basicProfile, i
           <Card.Content>
             <div className='walletContent'>
               <div className='address'>
-                <Identicon string={address} size='30' />
+                <Identicon string={wallet.address} size='30' />
                 <Spacer />
                 <Description
                   title='Address'
-                  content={address.substr(0, 5) + '...' + address.slice(address.length - 5)}
+                  content={wallet.address.substr(0, 5) + '...' + wallet.address.slice(wallet.address.length - 5)}
                 />
               </div>
               <Spacer w={8} />
-              <Description title='Balance' content={`${balance} ETH`} />
+              <Description title='Balance' content={`${wallet.balance} ETH`} />
               <Spacer w={8} />
               <Description
                 title='Network'
                 content={
                   <Tag type='lite'>
-                    {chainId === 1
+                    {wallet.chainId === 1
                       ? 'Mainnet'
-                      : chainId === 3
+                      : wallet.chainId === 3
                       ? 'Ropsten'
-                      : chainId === 4
+                      : wallet.chainId === 4
                       ? 'Rinkeby'
-                      : chainId === 42
+                      : wallet.chainId === 42
                       ? 'Kovan'
                       : ''}
                   </Tag>
@@ -124,19 +120,13 @@ export const Home = ({ address, balance, chainId, authenticated, basicProfile, i
           </Card.Content>
           <Divider />
           <Card.Content>
-            {!authenticated ? (
-              <div className='loader'>
-                <p>Authenticating DID</p>
-                <Spacer />
-                <Spinner />
-              </div>
-            ) : basicProfile === undefined ? (
+            {ceramic.basicProfile === undefined ? (
               <div className='loader'>
                 <p>Fetching Basic Profile</p>
                 <Spacer />
                 <Spinner />
               </div>
-            ) : basicProfile === null ? (
+            ) : ceramic.basicProfile === null ? (
               <div className='basicProfileNotFound'>
                 <p>Basic Profile not found, update now!?</p>
                 <Spacer w={4} />
@@ -147,11 +137,14 @@ export const Home = ({ address, balance, chainId, authenticated, basicProfile, i
               </div>
             ) : (
               <div className='basicProfileContent'>
-                <Description title='Name' content={basicProfile.name ? basicProfile.name : '--'} />
+                <Description title='Name' content={ceramic.basicProfile.name ? ceramic.basicProfile.name : '--'} />
                 <Spacer w={8} />
-                <Description title='Description' content={basicProfile.description ? basicProfile.description : '--'} />
+                <Description
+                  title='Description'
+                  content={ceramic.basicProfile.description ? ceramic.basicProfile.description : '--'}
+                />
                 <Spacer w={8} />
-                <Description title='Emoji' content={basicProfile.emoji ? basicProfile.emoji : '--'} />
+                <Description title='Emoji' content={ceramic.basicProfile.emoji ? ceramic.basicProfile.emoji : '--'} />
                 <Spacer w={8} />
                 <Button className='updateProfileBtn' type='secondary' ghost auto onClick={() => setVisible(true)}>
                   Update Profile

@@ -1,6 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;900&display=swap');
+
 .wrapper {
-  width: 1000px;
-  margin: 2rem auto;
+  width: 900px;
+  margin: auto;
+  padding: 1rem 0;
+  font-family: 'Poppins', sans-serif;
 }
 
 .header {
@@ -9,15 +13,19 @@
   align-items: center;
 }
 
-.heading {
-  display: flex;
-  align-items: center;
-}
-
 .connectButtons {
   display: flex;
 }
 
-.content {
-  margin-top: 1rem;
+.gradientText {
+  background: #3494e6; /* fallback for old browsers */
+  background: -webkit-linear-gradient(to right, #ec6ead, #3494e6); /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(
+    to right,
+    #ec6ead,
+    #3494e6
+  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
