@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import { web3Modal, connectWallet, disconectWallet } from './utils/wallet';
 import { connectCeramic } from './utils/ceramic';
 import { connectThreadDB } from './utils/threadDB';
 
+import { registerUser, getUser, getUsers } from './lib/writer';
+
 import './app.css';
 
-import { Button, Text, Note, useToasts, Tabs, Loading, Spacer } from '@geist-ui/core';
+import { Button, Text, Note, useToasts, Tabs, Loading, Spacer, Divider } from '@geist-ui/core';
 
 import { Home } from './components/home';
 import { Write } from './components/write';
@@ -22,6 +25,9 @@ const App = () => {
   const [ceramicConnected, setCeramicConnected] = useState(false);
   const [threadDB, setThreadDB] = useState();
   const [threadDBConnected, setThreadDBConnected] = useState(false);
+
+  const [user, setUser] = useState();
+  const [users, setUsers] = useState();
 
   useEffect(() => {
     function init() {
@@ -63,6 +69,15 @@ const App = () => {
       };
       setThreadDB(threadDB);
       setThreadDBConnected(true);
+
+      const user = await getUser(did, threadDBClient, threadID);
+      if (!user) {
+        await registerUser(address, did, threadDBClient, threadID);
+      }
+      setUser(user);
+
+      const users = await getUsers(threadDBClient, threadID);
+      setUsers(users);
     } catch (e) {
       console.log(e);
 
@@ -74,11 +89,11 @@ const App = () => {
     <div className='wrapper'>
       <div className='header'>
         <div className='heading'>
-          <Text h1 className='gradientText'>
+          <Text h1 margin={0} className='gradient-text'>
             0xWriter
           </Text>
         </div>
-        <div className='connectButtons'>
+        <div className='connect-buttons'>
           {!walletConnected ? (
             <Button type='secondary' auto onClick={connect}>
               Connect Wallet
@@ -102,25 +117,25 @@ const App = () => {
       <div className='content'>
         {!walletConnected ? (
           <>
-            <Note label={false}>
+            <Note label={false} marginTop={1}>
               <Text b>Welcome to 0xWriter 👋</Text>
               <Text>Connect your wallet to get started!</Text>
             </Note>
           </>
         ) : !ceramicConnected ? (
-          <Loading type='success' spaceRatio={2.5}>
+          <Loading type='success' spaceRatio={2.5} marginTop={1}>
             Connecting to ceramic
           </Loading>
         ) : !threadDBConnected ? (
-          <Loading type='success' spaceRatio={2.5}>
+          <Loading type='success' spaceRatio={2.5} marginTop={1}>
             Connecting to textile threadDB
           </Loading>
         ) : (
           <>
-            <Tabs initialValue='1'>
+            <Tabs initialValue='1' align='center'>
               <Tabs.Item label='Home' value='1'>
                 <Spacer />
-                <Home wallet={wallet} ceramic={ceramic} handleMessage={handleMessage} />
+                <Home wallet={wallet} ceramic={ceramic} user={user} users={users} handleMessage={handleMessage} />
               </Tabs.Item>
               <Tabs.Item label='Write' value='2'>
                 <Spacer />

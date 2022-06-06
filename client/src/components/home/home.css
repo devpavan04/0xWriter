@@ -1,20 +1,20 @@
-.walletContent,
-.basicProfileNotFound,
-.basicProfileContent {
+.address-identicon {
   display: flex;
   align-items: center;
 }
 
-.address {
-  display: flex;
-  align-items: center;
+.home-content {
+  padding: 1rem 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 6rem;
+  row-gap: 3rem;
 }
 
-.loader {
-  display: flex;
-  align-items: center;
+.profile-not-found {
+  grid-column: 1/-1;
 }
 
-.modalContent {
-  text-align: left;
+.update-profile-btn {
+  width: 60% !important;
 }

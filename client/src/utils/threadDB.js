@@ -1,4 +1,4 @@
-import { Client } from '@textile/hub';
+import { Client, ThreadID } from '@textile/hub';
 import { solveChallenge } from './socket-io';
 import { getIdentity } from './identity';
 
@@ -11,7 +11,7 @@ export const connectThreadDB = async (signer, address) => {
       const threadID = Uint8Array.from(credentials.threadID);
       return {
         threadDBClient: client,
-        threadID,
+        threadID: ThreadID.fromBytes(threadID),
       };
     } else {
       const identity = await getIdentity(signer, address);
@@ -26,7 +26,7 @@ export const connectThreadDB = async (signer, address) => {
       const threadID = Uint8Array.from(credentials.threadID);
       return {
         threadDBClient: client,
-        threadID,
+        threadID: ThreadID.fromBytes(threadID),
       };
     }
   } catch (e) {

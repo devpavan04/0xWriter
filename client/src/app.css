@@ -13,11 +13,11 @@
   align-items: center;
 }
 
-.connectButtons {
+.connect-buttons {
   display: flex;
 }
 
-.gradientText {
+.gradient-text {
   background: #3494e6; /* fallback for old browsers */
   background: -webkit-linear-gradient(to right, #ec6ead, #3494e6); /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(
