@@ -21,7 +21,7 @@ module.exports = (io) => {
 
             const client = await newThreadDBClient();
 
-            const token = await client.getTokenChallenge(data.pubKey, (challenge) => {
+            const token = await client.getTokenChallenge(data.publicKey, (challenge) => {
               return new Promise((resolve, reject) => {
                 //send challenge to client
                 io.emit(
@@ -41,22 +41,22 @@ module.exports = (io) => {
 
             console.log('token:', token);
 
-            /** Get API authorization for the user */
+            // Get API authorization for the user
             const { sig, msg } = await getAPISignature(3600);
 
-            /** Include the token in the auth payload */
+            // Include the token in the auth payload
             const userAuth = {
               sig,
               msg,
               token: token,
-              key: process.env.USER_GROUP_SECRET,
+              key: process.env.USER_GROUP_KEY,
             };
 
             // send token to client
             const threadID = await getThreadID();
 
             io.emit(
-              'authenticationResponse',
+              'initializeAuthenticationResponse',
               JSON.stringify({
                 type: 'token',
                 value: {
@@ -83,9 +83,9 @@ module.exports = (io) => {
       } catch (error) {
         console.error('Error:', error);
 
-        /** Notify the client of any errors */
+        // Notify the client of any errors
         io.emit(
-          'authenticationResponse',
+          'initializeAuthenticationResponse',
           JSON.stringify({
             type: 'error',
             value: error.message,

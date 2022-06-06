@@ -8,7 +8,7 @@ const initializeNewThreadDb = async () => {
   const client = await Client.withUserAuth(userAuth);
   await client.getToken(privateKey);
   const threadID = await client.newDB();
-  await client.newCollection(threadID, { name: 'User', schema: userSchema });
+  await client.newCollection(threadID, { name: 'Users', schema: userSchema });
 
   return threadID.buf;
 };

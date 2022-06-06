@@ -8,6 +8,9 @@
     "address": {
       "type": "string"
     },
+    "did": {
+      "type": "string"
+    },
     "deployedContractAddress": {
       "type": "string"
     },
