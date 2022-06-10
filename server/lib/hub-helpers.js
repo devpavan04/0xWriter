@@ -29,11 +29,11 @@ const newThreadDBClient = async () => {
   return client;
 };
 
-const getAPISignature = async (seconds = 300) => {
-  const expiration = new Date(Date.now() + 1000 * seconds);
-  const APISignature = await createAPISig(process.env.USER_GROUP_SECRET, expiration);
+const getAPISignature = async () => {
+  const expiration = new Date(Date.now() + 600 * 1000); // 10 minutes
+  const { sig, msg } = await createAPISig(process.env.USER_GROUP_SECRET, expiration);
 
-  return APISignature;
+  return { sig, msg, expiration };
 };
 
 module.exports = {

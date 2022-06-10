@@ -42,7 +42,7 @@ module.exports = (io) => {
             console.log('token:', token);
 
             // Get API authorization for the user
-            const { sig, msg } = await getAPISignature(3600);
+            const { sig, msg, expiration } = await getAPISignature();
 
             // Include the token in the auth payload
             const userAuth = {
@@ -62,6 +62,7 @@ module.exports = (io) => {
                 value: {
                   userAuth,
                   threadID,
+                  userAuthExpiration: expiration,
                 },
               })
             );

@@ -1,33 +1,76 @@
-const { Client, Where, ThreadID } = require('@textile/hub');
+import { Client, Where, ThreadID } from '@textile/hub';
+import { getThreadDBCredentials } from '../utils/threadDB.js';
 
-export const registerUser = async (address, did, threadDBClient, threadID) => {
-  const userData = {
-    address,
-    did,
-    deployedContractAddress: '',
-    subscribedBy: [],
-    subscribedTo: [],
-  };
+export const registerUser = async (address, did) => {
+  try {
+    const credentials = await getThreadDBCredentials();
 
-  const query = new Where('did').eq(did);
+    if (credentials) {
+      const { threadDBClient, threadID } = credentials;
 
-  const user = await threadDBClient.find(threadID, 'Users', query);
+      const userData = {
+        address,
+        did,
+        deployedContractAddress: '',
+        subscribedBy: [],
+        subscribedTo: [],
+      };
 
-  if (user.length < 1) {
-    await threadDBClient.create(threadID, 'Users', [userData]);
+      const query = new Where('did').eq(did);
+
+      const user = await threadDBClient.find(threadID, 'Users', query);
+
+      if (user.length < 1) {
+        await threadDBClient.create(threadID, 'Users', [userData]);
+      }
+    } else {
+      throw new Error('ThreadDB credentials not found! Disconnect & reconnect your wallet.');
+    }
+  } catch (e) {
+    console.log(e);
+
+    throw new Error(e.message);
   }
 };
 
-export const getUser = async (did, threadDBClient, threadID) => {
-  const query = new Where('did').eq(did);
+export const getUser = async (did) => {
+  try {
+    const credentials = await getThreadDBCredentials();
 
-  const user = await threadDBClient.find(threadID, 'Users', query);
+    if (credentials) {
+      const { threadDBClient, threadID } = credentials;
 
-  return user[0];
+      const query = new Where('did').eq(did);
+
+      const user = await threadDBClient.find(threadID, 'Users', query);
+
+      return user[0];
+    } else {
+      throw new Error('ThreadDB credentials not found! Disconnect & reconnect your wallet.');
+    }
+  } catch (e) {
+    console.log(e);
+
+    throw new Error(e.message);
+  }
 };
 
-export const getUsers = async (threadDBClient, threadID) => {
-  const users = await threadDBClient.find(threadID, 'Users', {});
+export const getUsers = async () => {
+  try {
+    const credentials = await getThreadDBCredentials();
 
-  return users;
+    if (credentials) {
+      const { threadDBClient, threadID } = credentials;
+
+      const users = await threadDBClient.find(threadID, 'Users', {});
+
+      return users;
+    } else {
+      throw new Error('ThreadDB credentials not found! Disconnect & reconnect your wallet.');
+    }
+  } catch (e) {
+    console.log(e);
+
+    throw new Error(e.message);
+  }
 };

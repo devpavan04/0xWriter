@@ -70,13 +70,14 @@ const App = () => {
       setThreadDB(threadDB);
       setThreadDBConnected(true);
 
-      const user = await getUser(did, threadDBClient, threadID);
+      const user = await getUser(did);
       if (!user) {
-        await registerUser(address, did, threadDBClient, threadID);
+        await registerUser(address, did);
       }
       setUser(user);
 
-      const users = await getUsers(threadDBClient, threadID);
+      const users = await getUsers();
+      console.log(users);
       setUsers(users);
     } catch (e) {
       console.log(e);
@@ -104,8 +105,10 @@ const App = () => {
                 type='secondary'
                 auto
                 onClick={async () => {
-                  await disconectWallet();
-                  setWalletConnected(false);
+                  const { threadDBDisconnected, walletDisconnected } = await disconectWallet();
+                  if (threadDBDisconnected) setThreadDBConnected(false);
+                  setCeramicConnected(false);
+                  if (walletDisconnected) setWalletConnected(false);
                 }}
               >
                 Disconnect Wallet
@@ -135,11 +138,11 @@ const App = () => {
             <Tabs initialValue='1' align='center'>
               <Tabs.Item label='Home' value='1'>
                 <Spacer />
-                <Home wallet={wallet} ceramic={ceramic} user={user} users={users} handleMessage={handleMessage} />
+                <Home wallet={wallet} ceramic={ceramic} handleMessage={handleMessage} />
               </Tabs.Item>
               <Tabs.Item label='Write' value='2'>
                 <Spacer />
-                <Write />
+                <Write wallet={wallet} />
               </Tabs.Item>
             </Tabs>
           </>
@@ -162,6 +165,12 @@ window.ethereum &&
 window.ethereum &&
   window.ethereum.on('accountsChanged', async (accounts) => {
     if (accounts.length === 0) {
+      const credentials = JSON.parse(localStorage.getItem('payload'));
+
+      if (credentials !== null) {
+        localStorage.removeItem('payload');
+      }
+
       await web3Modal.clearCachedProvider();
       setTimeout(() => {
         window.location.reload();

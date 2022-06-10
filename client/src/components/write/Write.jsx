@@ -27,12 +27,12 @@ const intitalEditorContent = () => {
   };
 };
 
-export const Write = () => {
+export const Write = ({ wallet }) => {
   const editorInstance = useRef();
 
   useEffect(() => {
     if (!editorInstance.current) {
-      let draft = window.localStorage.getItem('editorDraft');
+      let draft = window.localStorage.getItem(`editorDraft-${wallet.address}`);
       if (draft === null) {
         initializeEditor(intitalEditorContent());
       } else {
@@ -56,7 +56,7 @@ export const Write = () => {
       },
       onChange: async () => {
         let content = await editor.saver.save();
-        window.localStorage.setItem('editorDraft', JSON.stringify(content));
+        window.localStorage.setItem(`editorDraft-${wallet.address}`, JSON.stringify(content));
       },
       autofocus: true,
       tools: {

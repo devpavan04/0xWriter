@@ -4,15 +4,12 @@ import { getIdentity } from './identity';
 
 export const connectThreadDB = async (signer, address) => {
   try {
-    const credentials = JSON.parse(localStorage.getItem('payload'));
+    const credentials = await getThreadDBCredentials();
 
-    if (credentials !== null) {
-      const client = Client.withUserAuth(credentials.userAuth);
-      const threadID = Uint8Array.from(credentials.threadID);
-      return {
-        threadDBClient: client,
-        threadID: ThreadID.fromBytes(threadID),
-      };
+    if (credentials) {
+      const { threadDBClient, threadID } = credentials;
+
+      return { threadDBClient, threadID };
     } else {
       const identity = await getIdentity(signer, address);
 
@@ -24,6 +21,7 @@ export const connectThreadDB = async (signer, address) => {
       localStorage.setItem('payload', JSON.stringify(credentials));
       const client = await Client.withUserAuth(credentials.userAuth);
       const threadID = Uint8Array.from(credentials.threadID);
+
       return {
         threadDBClient: client,
         threadID: ThreadID.fromBytes(threadID),
@@ -32,6 +30,29 @@ export const connectThreadDB = async (signer, address) => {
   } catch (e) {
     console.log(e);
 
-    throw new Error('Textile ThreadDB connection failed!');
+    throw new Error(e.message);
+  }
+};
+
+export const getThreadDBCredentials = () => {
+  const credentials = JSON.parse(localStorage.getItem('payload'));
+
+  if (credentials !== null) {
+    const expiration = new Date(credentials.userAuthExpiration).getTime();
+
+    if (expiration > Date.now()) {
+      const client = Client.withUserAuth(credentials.userAuth);
+
+      const threadID = Uint8Array.from(credentials.threadID);
+
+      return {
+        threadDBClient: client,
+        threadID: ThreadID.fromBytes(threadID),
+      };
+    } else {
+      throw new Error('Auth expired :( Reconnect your wallet.');
+    }
+  } else {
+    return false;
   }
 };

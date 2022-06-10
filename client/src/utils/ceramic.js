@@ -45,6 +45,6 @@ export const connectCeramic = async (provider, address) => {
   } catch (e) {
     console.log(e);
 
-    throw new Error('Ceramic connection failed!');
+    throw new Error(e.message);
   }
 };

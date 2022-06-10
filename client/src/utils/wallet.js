@@ -28,10 +28,25 @@ export const connectWallet = async () => {
   } catch (e) {
     console.log(e);
 
-    throw new Error('Wallet connection failed!');
+    throw new Error(e.message);
   }
 };
 
 export const disconectWallet = async () => {
+  let walletDisconnected = false,
+    threadDBDisconnected = false;
+
+  const credentials = JSON.parse(localStorage.getItem('payload'));
+
+  if (credentials !== null) {
+    localStorage.removeItem('payload');
+
+    threadDBDisconnected = true;
+  }
+
   await web3Modal.clearCachedProvider();
+
+  walletDisconnected = true;
+
+  return { threadDBDisconnected, walletDisconnected };
 };
