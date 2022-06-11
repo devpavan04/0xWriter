@@ -4,14 +4,15 @@ import { web3Modal, connectWallet, disconectWallet } from './utils/wallet';
 import { connectCeramic } from './utils/ceramic';
 import { connectThreadDB } from './utils/threadDB';
 
-import { registerUser, getUser, getUsers } from './lib/writer';
+import { registerUser, getUser } from './lib/writer';
 
 import './app.css';
 
-import { Button, Text, Note, useToasts, Tabs, Loading, Spacer, Divider } from '@geist-ui/core';
+import { Button, Text, Note, useToasts, Tabs, Loading, Spacer } from '@geist-ui/core';
 
-import { Home } from './components/home';
-import { Write } from './components/write';
+import { Home } from './components/Home';
+import { Write } from './components/Write';
+import { Contract } from './components/Contract';
 
 const App = () => {
   const { setToast } = useToasts({ placement: 'bottomRight', padding: '1rem' });
@@ -23,11 +24,9 @@ const App = () => {
   const [walletConnected, setWalletConnected] = useState(false);
   const [ceramic, setCeramic] = useState();
   const [ceramicConnected, setCeramicConnected] = useState(false);
-  const [threadDB, setThreadDB] = useState();
   const [threadDBConnected, setThreadDBConnected] = useState(false);
 
   const [user, setUser] = useState();
-  const [users, setUsers] = useState();
 
   useEffect(() => {
     function init() {
@@ -40,49 +39,51 @@ const App = () => {
 
   const connect = useCallback(async () => {
     try {
-      const { provider, injectedProvider, signer, address, balance, chainId } = await connectWallet();
+      const { provider, injectedProvider, signer, address, balance, chainID } = await connectWallet();
       const wallet = {
         provider,
         injectedProvider,
         signer,
         address,
         balance,
-        chainId,
+        chainID,
       };
       setWallet(wallet);
       setWalletConnected(true);
 
-      const { ceramicClient, did, idx, basicProfile } = await connectCeramic(provider, address);
+      const { ceramicClient, did, store, basicProfile } = await connectCeramic(provider, address);
       const ceramic = {
         client: ceramicClient,
         did,
-        idx,
+        store,
         basicProfile,
       };
       setCeramic(ceramic);
       setCeramicConnected(true);
 
-      const { threadDBClient, threadID } = await connectThreadDB(signer, address);
-      const threadDB = {
-        client: threadDBClient,
-        threadID,
-      };
-      setThreadDB(threadDB);
+      await connectThreadDB(signer, address);
       setThreadDBConnected(true);
 
       const user = await getUser(did);
       if (!user) {
         await registerUser(address, did);
+        const user = await getUser(did);
+        setUser(user);
       }
       setUser(user);
-
-      const users = await getUsers();
-      console.log(users);
-      setUsers(users);
     } catch (e) {
       console.log(e);
 
-      handleMessage('error', e.message);
+      if (e.message === 'Textile Auth Expired!' || e.message === 'Bad API key signature') {
+        handleMessage('secondary', 'Textile Auth expired! Reconnect your wallet.');
+
+        const { threadDBDisconnected, walletDisconnected } = await disconectWallet();
+        if (threadDBDisconnected) setThreadDBConnected(false);
+        setCeramicConnected(false);
+        if (walletDisconnected) setWalletConnected(false);
+      } else {
+        handleMessage('error', e.message);
+      }
     }
   }, []);
 
@@ -90,7 +91,7 @@ const App = () => {
     <div className='wrapper'>
       <div className='header'>
         <div className='heading'>
-          <Text h1 margin={0} className='gradient-text'>
+          <Text h1 margin={0} className='header-text'>
             0xWriter
           </Text>
         </div>
@@ -120,28 +121,36 @@ const App = () => {
       <div className='content'>
         {!walletConnected ? (
           <>
-            <Note label={false} marginTop={1}>
+            <Note label={false} type='default' marginTop='1rem'>
               <Text b>Welcome to 0xWriter 👋</Text>
               <Text>Connect your wallet to get started!</Text>
             </Note>
           </>
         ) : !ceramicConnected ? (
-          <Loading type='success' spaceRatio={2.5} marginTop={1}>
+          <Loading type='success' spaceRatio={2.5} marginTop='1rem'>
             Connecting to ceramic
           </Loading>
         ) : !threadDBConnected ? (
-          <Loading type='success' spaceRatio={2.5} marginTop={1}>
+          <Loading type='success' spaceRatio={2.5} marginTop='1rem'>
             Connecting to textile threadDB
           </Loading>
+        ) : wallet.chainID !== 80001 ? (
+          <Note width='fit-content' margin='auto' marginTop='1rem' type='default' label={false}>
+            Please connect to Mumbai Testnet.
+          </Note>
         ) : (
           <>
-            <Tabs initialValue='1' align='center'>
+            <Tabs initialValue='1' hideDivider align='center'>
               <Tabs.Item label='Home' value='1'>
-                <Spacer />
+                <Spacer h={1} />
                 <Home wallet={wallet} ceramic={ceramic} handleMessage={handleMessage} />
               </Tabs.Item>
-              <Tabs.Item label='Write' value='2'>
-                <Spacer />
+              <Tabs.Item label='Contract' value='2'>
+                <Spacer h={1} />
+                <Contract user={user} handleMessage={handleMessage} />
+              </Tabs.Item>
+              <Tabs.Item label='Write' value='3'>
+                <Spacer h={1} />
                 <Write wallet={wallet} />
               </Tabs.Item>
             </Tabs>
@@ -155,7 +164,7 @@ const App = () => {
 export default App;
 
 window.ethereum &&
-  window.ethereum.on('chainChanged', (chainId) => {
+  window.ethereum.on('chainChanged', (chainID) => {
     web3Modal.cachedProvider &&
       setTimeout(() => {
         window.location.reload();

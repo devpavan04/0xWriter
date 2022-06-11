@@ -24,7 +24,7 @@ export const registerUser = async (address, did) => {
         await threadDBClient.create(threadID, 'Users', [userData]);
       }
     } else {
-      throw new Error('ThreadDB credentials not found! Disconnect & reconnect your wallet.');
+      throw new Error('ThreadDB credentials not found! Reconnect your wallet.');
     }
   } catch (e) {
     console.log(e);
@@ -46,7 +46,7 @@ export const getUser = async (did) => {
 
       return user[0];
     } else {
-      throw new Error('ThreadDB credentials not found! Disconnect & reconnect your wallet.');
+      throw new Error('ThreadDB credentials not found! Reconnect your wallet.');
     }
   } catch (e) {
     console.log(e);
@@ -66,7 +66,7 @@ export const getUsers = async () => {
 
       return users;
     } else {
-      throw new Error('ThreadDB credentials not found! Disconnect & reconnect your wallet.');
+      throw new Error('ThreadDB credentials not found! Reconnect your wallet.');
     }
   } catch (e) {
     console.log(e);

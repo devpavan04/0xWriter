@@ -1,0 +1,9 @@
+.contract-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.update-profile-btn {
+  width: 10% !important;
+}

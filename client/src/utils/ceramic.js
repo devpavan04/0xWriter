@@ -26,20 +26,19 @@ export const connectCeramic = async (provider, address) => {
     ceramic.did = did;
 
     // USING IDX
-    const idx = new IDX({ ceramic });
-    const basicProfile = await idx.get('basicProfile');
+    // const idx = new IDX({ ceramic });
+    // const basicProfile = await idx.get('basicProfile');
     // USING IDX
 
     // USING DID Datastore
-    // const store = new DIDDataStore({ ceramic, model: modelAliases });
-    // const basicProfile = await store.get('basicProfile');
-    // console.log(basicProfile);
+    const store = new DIDDataStore({ ceramic, model: modelAliases });
+    const basicProfile = await store.get('BasicProfileDefinition');
     // USING DID Datastore
 
     return {
       ceramicClient: ceramic,
       did: did._id,
-      idx,
+      store,
       basicProfile,
     };
   } catch (e) {

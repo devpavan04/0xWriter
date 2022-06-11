@@ -22,9 +22,9 @@ export const connectWallet = async () => {
     const signer = injectedProvider.getSigner();
     const address = await signer.getAddress();
     const balance = Number(ethers.utils.formatEther(await signer.getBalance())).toFixed(2);
-    const chainId = await signer.getChainId();
+    const chainID = await signer.getChainId();
 
-    return { provider, injectedProvider, signer, address, balance, chainId };
+    return { provider, injectedProvider, signer, address, balance, chainID };
   } catch (e) {
     console.log(e);
 

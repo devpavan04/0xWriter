@@ -1,17 +1,28 @@
 import { useState, useEffect } from 'react';
 import Identicon from 'react-identicons';
 import './home.css';
-import { Card, Button, Spacer, Divider, Text, Note, Tag, Description, Modal, useModal, Input } from '@geist-ui/core';
+import { Button, Spacer, Note, Tag, Description, Modal, useModal, Input, Image } from '@geist-ui/core';
 
 export const Home = ({ wallet, ceramic, handleMessage }) => {
-  const { address, balance, chainId } = wallet;
-  const { idx, basicProfile } = ceramic;
+  const { address, balance, chainID } = wallet;
+  const { did, store, basicProfile } = ceramic;
 
   const { setVisible, bindings } = useModal();
 
-  const [name, setName] = useState(basicProfile.name);
-  const [description, setDescription] = useState(basicProfile.description);
-  const [emoji, setEmoji] = useState(basicProfile.emoji);
+  const [name, setName] = useState();
+  const [description, setDescription] = useState();
+  const [emoji, setEmoji] = useState();
+
+  useEffect(() => {
+    function init() {
+      if (basicProfile !== undefined && basicProfile !== null) {
+        setName(basicProfile.name);
+        setDescription(basicProfile.description);
+        setEmoji(basicProfile.emoji);
+      }
+    }
+    init();
+  }, []);
 
   const updateBasicProfile = async () => {
     if (name === '') {
@@ -21,8 +32,10 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
     } else if (emoji === '') {
       handleMessage('warning', 'Please enter emoji.');
     } else {
+      handleMessage('secondary', 'Updating...');
+
       try {
-        await idx.set('basicProfile', {
+        await store.set('BasicProfileDefinition', {
           name,
           description,
           emoji,
@@ -47,7 +60,7 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
 
   const renderUpdateBasicProfileModal = () => {
     return (
-      <Modal {...bindings}>
+      <Modal {...bindings} width='360px'>
         <div className='modal-content'>
           <Input clearable label='Name' value={name} onChange={(e) => setName(e.target.value)} width='100%' />
           <Input
@@ -58,7 +71,7 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
             width='100%'
           />
           <Input clearable label='Emoji' value={emoji} onChange={(e) => setEmoji(e.target.value)} width='100%' />
-          <Button type='secondary' ghost auto onClick={updateBasicProfile}>
+          <Button type='secondary' auto onClick={updateBasicProfile}>
             Update Profile
           </Button>
         </div>
@@ -69,31 +82,19 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
   return (
     <div className='home-content'>
       <div className='address-identicon'>
-        {/* <Identicon string={address} size='30' />
-        <Spacer /> */}
-        <Description title='Address' content={address.substr(0, 10) + '....' + address.slice(address.length - 12)} />
+        <Identicon string={address} size='30' />
+        <Spacer />
+        <Description title='Address' content={address.substr(0, 12) + '....' + address.slice(address.length - 12)} />
       </div>
+      <Description title='DID' content={did.substr(0, 14) + '....' + did.slice(did.length - 14)} />
       <Description title='Balance' content={`${balance} ETH`} />
-      <Description
-        title='Network'
-        content={
-          <Tag type='lite'>
-            {chainId === 1
-              ? 'Mainnet'
-              : chainId === 3
-              ? 'Ropsten'
-              : chainId === 4
-              ? 'Rinkeby'
-              : chainId === 42
-              ? 'Kovan'
-              : ''}
-          </Tag>
-        }
-      />
+      <Description title='Network' content={<Tag type='lite'>Mumbai Testnet</Tag>} />
       {basicProfile !== undefined && basicProfile === null ? (
         <div className='profile-not-found'>
-          <Text>Basic Profile not found, update now.</Text>
-          <Button type='secondary' ghost auto onClick={() => setVisible(true)}>
+          <Note width='fit-content' marginTop='0' marginBottom='1' type='default' label={false}>
+            Basic Profile not found, update now.
+          </Note>
+          <Button type='secondary' auto onClick={() => setVisible(true)}>
             Update Profile
           </Button>
           {renderUpdateBasicProfileModal()}

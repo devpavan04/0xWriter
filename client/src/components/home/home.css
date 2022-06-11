@@ -1,30 +1,19 @@
-/* .address-identicon {
+.address-identicon {
   display: flex;
-  align-items: center;
-} */
+}
 
 .home-content {
-  padding: 1rem 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  column-gap: 10rem;
-  row-gap: 3rem;
-}
-
-.profile-not-found {
-  grid-column: 1/-1;
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 2rem;
-}
-
-.update-profile-btn {
-  width: 50% !important;
+  flex-direction: column;
+  gap: 3rem;
 }
 
 .modal-content {
   display: flex;
   flex-direction: column;
   gap: 1.4rem;
+}
+
+.update-profile-btn {
+  width: 10% !important;
 }

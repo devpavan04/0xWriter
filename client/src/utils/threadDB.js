@@ -34,7 +34,7 @@ export const connectThreadDB = async (signer, address) => {
   }
 };
 
-export const getThreadDBCredentials = () => {
+export const getThreadDBCredentials = async () => {
   const credentials = JSON.parse(localStorage.getItem('payload'));
 
   if (credentials !== null) {
@@ -50,7 +50,7 @@ export const getThreadDBCredentials = () => {
         threadID: ThreadID.fromBytes(threadID),
       };
     } else {
-      throw new Error('Auth expired :( Reconnect your wallet.');
+      throw new Error('Textile Auth Expired!');
     }
   } else {
     return false;
