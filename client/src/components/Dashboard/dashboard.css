@@ -1,0 +1,15 @@
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.address-identicon {
+  display: flex;
+}
+
+.writers-address-identicon {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}

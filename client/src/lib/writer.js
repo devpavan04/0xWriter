@@ -74,3 +74,33 @@ export const getUsers = async () => {
     throw new Error(e.message);
   }
 };
+
+export const setUserDeployedContractAddress = async (did, deployedContractAddress) => {
+  try {
+    const credentials = await getThreadDBCredentials();
+
+    if (credentials) {
+      const { threadDBClient, threadID } = credentials;
+
+      const query = new Where('did').eq(did);
+
+      const user = await threadDBClient.find(threadID, 'Users', query);
+
+      if (user.length < 1) return;
+
+      let userData = user[0];
+
+      if (userData.deployedContractAddress === deployedContractAddress) return;
+
+      userData.deployedContractAddress = deployedContractAddress;
+
+      return await threadDBClient.save(threadID, 'Users', [userData]);
+    } else {
+      throw new Error('ThreadDB credentials not found! Reconnect your wallet.');
+    }
+  } catch (e) {
+    console.log(e);
+
+    throw new Error(e.message);
+  }
+};

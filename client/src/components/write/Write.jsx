@@ -83,11 +83,11 @@ export const Write = ({ wallet }) => {
     <div>
       <div id='editor'></div>
       <div className='cta'>
-        <Button type='error' ghost onClick={deleteConetnt} width='0.6'>
+        <Button type='error' scale={0.8} ghost onClick={deleteConetnt} width='0.6'>
           delete
         </Button>
         <Spacer />
-        <Button type='secondary' width='0.6'>
+        <Button type='secondary' shadow scale={0.8} width='0.6'>
           Save
         </Button>
       </div>

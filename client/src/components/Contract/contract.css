@@ -4,6 +4,41 @@
   gap: 2rem;
 }
 
-.update-profile-btn {
+.btn {
   width: 10% !important;
+}
+
+.user-contract-content {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 3rem;
+}
+
+.reads {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  grid-column: 1/2;
+  grid-row: 1/2;
+}
+
+.writes {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  grid-column: 2/-1;
+  grid-row: 1/2;
+}
+
+.withdraw-balance {
+  grid-column: 1/-1;
+}
+
+.write {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  margin-left: 3rem;
 }

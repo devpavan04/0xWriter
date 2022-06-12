@@ -1,18 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-
+import { ethers } from 'ethers';
 import { web3Modal, connectWallet, disconectWallet } from './utils/wallet';
 import { connectCeramic } from './utils/ceramic';
 import { connectThreadDB } from './utils/threadDB';
-
-import { registerUser, getUser } from './lib/writer';
-
+import { registerUser, getUser, setUserDeployedContractAddress, getUsers } from './lib/writer';
+import contractABI from './contracts/abi.json';
+import contractAddress from './contracts/address.json';
 import './app.css';
-
 import { Button, Text, Note, useToasts, Tabs, Loading, Spacer } from '@geist-ui/core';
-
 import { Home } from './components/Home';
 import { Write } from './components/Write';
 import { Contract } from './components/Contract';
+import { Dashboard } from './components/Dashboard';
 
 const App = () => {
   const { setToast } = useToasts({ placement: 'bottomRight', padding: '1rem' });
@@ -25,8 +24,8 @@ const App = () => {
   const [ceramic, setCeramic] = useState();
   const [ceramicConnected, setCeramicConnected] = useState(false);
   const [threadDBConnected, setThreadDBConnected] = useState(false);
-
   const [user, setUser] = useState();
+  const [writer, setWriter] = useState();
 
   useEffect(() => {
     function init() {
@@ -71,6 +70,18 @@ const App = () => {
         setUser(user);
       }
       setUser(user);
+
+      const writer = new ethers.Contract(contractAddress.writer, contractABI.writer, signer);
+      setWriter(writer);
+
+      const userHasDeployed = await writer.getHasWriterDeployed(address);
+      if (userHasDeployed) {
+        const deployedContractAddress = await writer.getWriterDeployedContractAddress(address);
+        await setUserDeployedContractAddress(did, deployedContractAddress);
+      }
+
+      const users = await getUsers();
+      console.log(users);
     } catch (e) {
       console.log(e);
 
@@ -91,19 +102,21 @@ const App = () => {
     <div className='wrapper'>
       <div className='header'>
         <div className='heading'>
-          <Text h1 margin={0} className='header-text'>
+          <Text p margin={0} className='header-text'>
             0xWriter
           </Text>
         </div>
         <div className='connect-buttons'>
           {!walletConnected ? (
-            <Button type='secondary' auto onClick={connect}>
+            <Button type='secondary' shadow scale={0.8} auto onClick={connect}>
               Connect Wallet
             </Button>
           ) : (
             <>
               <Button
                 type='secondary'
+                shadow
+                scale={0.8}
                 auto
                 onClick={async () => {
                   const { threadDBDisconnected, walletDisconnected } = await disconectWallet();
@@ -127,31 +140,35 @@ const App = () => {
             </Note>
           </>
         ) : !ceramicConnected ? (
-          <Loading type='success' spaceRatio={2.5} marginTop='1rem'>
+          <Loading type='secondary' spaceRatio={2.5} marginTop='1rem'>
             Connecting to ceramic
           </Loading>
         ) : !threadDBConnected ? (
-          <Loading type='success' spaceRatio={2.5} marginTop='1rem'>
+          <Loading type='secondary' spaceRatio={2.5} marginTop='1rem'>
             Connecting to textile threadDB
           </Loading>
         ) : wallet.chainID !== 80001 ? (
-          <Note width='fit-content' margin='auto' marginTop='1rem' type='default' label={false}>
+          <Note width='fit-content' margin='auto' marginTop='1rem' type='secondary' label={false}>
             Please connect to Mumbai Testnet.
           </Note>
         ) : (
           <>
             <Tabs initialValue='1' hideDivider align='center'>
               <Tabs.Item label='Home' value='1'>
-                <Spacer h={1} />
+                <Spacer h={2} />
                 <Home wallet={wallet} ceramic={ceramic} handleMessage={handleMessage} />
               </Tabs.Item>
-              <Tabs.Item label='Contract' value='2'>
-                <Spacer h={1} />
-                <Contract user={user} handleMessage={handleMessage} />
+              <Tabs.Item label='Your Contract' value='2'>
+                <Spacer h={2} />
+                <Contract wallet={wallet} ceramic={ceramic} user={user} writer={writer} handleMessage={handleMessage} />
               </Tabs.Item>
               <Tabs.Item label='Write' value='3'>
                 <Spacer h={1} />
                 <Write wallet={wallet} />
+              </Tabs.Item>
+              <Tabs.Item label='0xWriter Contract' value='4'>
+                <Spacer h={2} />
+                <Dashboard wallet={wallet} writer={writer} handleMessage={handleMessage} />
               </Tabs.Item>
             </Tabs>
           </>
