@@ -12,6 +12,7 @@ import { Home } from './components/Home';
 import { Write } from './components/Write';
 import { Contract } from './components/Contract';
 import { Dashboard } from './components/Dashboard';
+import { Read } from './components/Read';
 
 const App = () => {
   const { setToast } = useToasts({ placement: 'bottomRight', padding: '1rem' });
@@ -25,6 +26,7 @@ const App = () => {
   const [ceramicConnected, setCeramicConnected] = useState(false);
   const [threadDBConnected, setThreadDBConnected] = useState(false);
   const [user, setUser] = useState();
+  const [users, setUsers] = useState();
   const [writer, setWriter] = useState();
 
   useEffect(() => {
@@ -81,7 +83,7 @@ const App = () => {
       }
 
       const users = await getUsers();
-      console.log(users);
+      setUsers(users);
     } catch (e) {
       console.log(e);
 
@@ -158,15 +160,26 @@ const App = () => {
                 <Spacer h={2} />
                 <Home wallet={wallet} ceramic={ceramic} handleMessage={handleMessage} />
               </Tabs.Item>
-              <Tabs.Item label='Your Contract' value='2'>
+              <Tabs.Item label='My Contract' value='2'>
                 <Spacer h={2} />
-                <Contract wallet={wallet} ceramic={ceramic} user={user} writer={writer} handleMessage={handleMessage} />
+                <Contract wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
               </Tabs.Item>
               <Tabs.Item label='Write' value='3'>
                 <Spacer h={1} />
                 <Write wallet={wallet} />
               </Tabs.Item>
-              <Tabs.Item label='0xWriter Contract' value='4'>
+              <Tabs.Item label='Read' value='4'>
+                <Spacer h={2} />
+                <Read
+                  wallet={wallet}
+                  ceramic={ceramic}
+                  writer={writer}
+                  user={user}
+                  users={users}
+                  handleMessage={handleMessage}
+                />
+              </Tabs.Item>
+              <Tabs.Item label='0xWriter Contract' value='5'>
                 <Spacer h={2} />
                 <Dashboard wallet={wallet} writer={writer} handleMessage={handleMessage} />
               </Tabs.Item>

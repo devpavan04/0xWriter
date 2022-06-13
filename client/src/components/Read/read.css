@@ -1,0 +1,32 @@
+.all-writers {
+  /* display: flex;
+  flex-direction: column;
+  gap: 2rem; */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.writer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem !important;
+}
+
+.writer-identicon-profile {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.writer-basic-profile {
+  display: flex;
+  flex-direction: column;
+}
+
+.writer-address-did {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}

@@ -12,7 +12,8 @@
   margin-top: 1rem;
   display: grid;
   grid-template-columns: 1fr 2fr;
-  gap: 3rem;
+  column-gap: 4rem;
+  row-gap: 2rem;
 }
 
 .reads {

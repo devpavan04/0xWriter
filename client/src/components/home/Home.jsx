@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
 import Identicon from 'react-identicons';
 import './home.css';
-import { Button, Spacer, Note, Tag, Description, Modal, useModal, Input } from '@geist-ui/core';
+import { Button, Text, Card, Note, Tag, Description, Modal, useModal, Input, Snippet } from '@geist-ui/core';
 
 export const Home = ({ wallet, ceramic, handleMessage }) => {
-  const { address, balance } = wallet;
-  const { did, store, basicProfile } = ceramic;
-
   const { setVisible, bindings } = useModal();
 
   const [name, setName] = useState();
@@ -16,10 +13,10 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
 
   useEffect(() => {
     function init() {
-      if (basicProfile !== undefined && basicProfile !== null) {
-        setName(basicProfile.name);
-        setDescription(basicProfile.description);
-        setEmoji(basicProfile.emoji);
+      if (ceramic.basicProfile !== undefined && ceramic.basicProfile !== null) {
+        setName(ceramic.basicProfile.name);
+        setDescription(ceramic.basicProfile.description);
+        setEmoji(ceramic.basicProfile.emoji);
       }
     }
     init();
@@ -36,7 +33,7 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
       } else {
         setUpdateProfileBtnLoading(true);
 
-        await store.set('BasicProfileDefinition', {
+        await ceramic.store.set('BasicProfileDefinition', {
           name,
           description,
           emoji,
@@ -92,15 +89,44 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
 
   return (
     <div className='home-content'>
-      <div className='address-identicon'>
-        <Identicon string={address} size='40' />
-        <Spacer />
-        <Description title='Address' content={address.substr(0, 12) + '....' + address.slice(address.length - 12)} />
-      </div>
-      <Description title='DID' content={did.substr(0, 14) + '....' + did.slice(did.length - 14)} />
-      <Description title='Balance' content={`${balance} MATIC`} />
+      <Description
+        title='User'
+        content={
+          <Card shadow width='100%'>
+            <div className='user'>
+              <div className='user-identicon-profile'>
+                <div className='user-identicon'>
+                  <Identicon string={wallet.address} bg='#eef' size='40' />
+                </div>
+                {ceramic.basicProfile !== undefined && ceramic.basicProfile !== null ? (
+                  <div className='user-basic-profile'>
+                    <div className='user-name'>
+                      {ceramic.basicProfile.name ? <Text b>{ceramic.basicProfile.name}</Text> : <Text>--</Text>}
+                    </div>
+                    <div className='user-description'>
+                      <Text>{ceramic.basicProfile.description ? ceramic.basicProfile.description : '--'}</Text>
+                    </div>
+                    <div className='user-emoji'>
+                      <Text>{ceramic.basicProfile.emoji ? ceramic.basicProfile.emoji : '--'}</Text>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+              <div className='user-address-did'>
+                <div className='user-did'>
+                  <Snippet type='lite' symbol='DID' text={ceramic.did} width='fit-content' />
+                </div>
+                <div className='user-address'>
+                  <Snippet type='lite' symbol='Address' text={wallet.address} width='fit-content' />
+                </div>
+              </div>
+            </div>
+          </Card>
+        }
+      />
+      <Description title='Balance' content={`${wallet.balance} MATIC`} />
       <Description title='Network' content={<Tag type='lite'>Mumbai Testnet</Tag>} />
-      {basicProfile !== undefined && basicProfile === null ? (
+      {ceramic.basicProfile !== undefined && ceramic.basicProfile === null ? (
         <div className='profile-not-found'>
           <Note width='fit-content' marginTop='0' marginBottom='1' type='secondary' label={false}>
             Basic Profile not found, update now.
@@ -112,9 +138,6 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
         </div>
       ) : (
         <>
-          <Description title='Name' content={basicProfile.name ? basicProfile.name : '--'} />
-          <Description title='Description' content={basicProfile.description ? basicProfile.description : '--'} />
-          <Description title='Emoji' content={basicProfile.emoji ? basicProfile.emoji : '--'} />
           <Button type='secondary' shadow scale={0.8} className='update-profile-btn' onClick={() => setVisible(true)}>
             Update Profile
           </Button>

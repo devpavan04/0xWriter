@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import contractABI from '../../contracts/abi.json';
 import './contract.css';
-import { Button, Spacer, Spinner, Note, Tag, Description, Input, Link } from '@geist-ui/core';
+import { Button, Spacer, Spinner, Note, Tag, Description, Input, Link, Divider, Text } from '@geist-ui/core';
 
 export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
   const [tokenName, setTokenName] = useState('');
@@ -21,6 +21,7 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
   const [userTokenBalance, setUserTokenBalance] = useState('');
   const [newMint, setNewMint] = useState();
   const [transferAddress, setTransferAddress] = useState();
+  const [transferAmount, setTransferAmount] = useState();
   const [newTokenPrice, setNewTokenPrice] = useState();
   const [deployBtnLoading, setDeployBtnLoading] = useState(false);
   const [mintBtnLoading, setMintBtnLoading] = useState(false);
@@ -71,7 +72,7 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
       } else if (!tokenPrice) {
         handleMessage('warning', 'Please enter token price.');
       } else if (!initialMint) {
-        handleMessage('warning', 'Please enter initial mint.');
+        handleMessage('warning', 'Please enter no.of tokens.');
       } else {
         setDeployBtnLoading(true);
 
@@ -143,6 +144,103 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
       console.log(e);
 
       setMintBtnLoading(false);
+      handleMessage('error', e.message);
+    }
+  };
+
+  const transferTokens = async () => {
+    try {
+      if (!transferAddress) {
+        handleMessage('warning', 'Please enter transfer address.');
+      } else if (!ethers.utils.isAddress(transferAddress)) {
+        handleMessage('warning', 'Please enter valid address.');
+      } else if (!transferAmount) {
+        handleMessage('warning', 'Please enter no. of tokens');
+      } else {
+        setTransferBtnLoading(true);
+
+        const txn = await writerERC20.transfer(transferAddress, Number(transferAmount));
+
+        const receipt = await txn.wait();
+
+        if (receipt.status === 1) {
+          setTransferBtnLoading(false);
+          handleMessage('success', 'Transaction successful!');
+        } else {
+          setTransferBtnLoading(false);
+          handleMessage('error', 'Transaction failed!');
+        }
+
+        setNewMint('');
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    } catch (e) {
+      console.log(e);
+
+      setTransferBtnLoading(false);
+      handleMessage('error', e.message);
+    }
+  };
+
+  const changeTokenPrice = async () => {
+    try {
+      if (!newTokenPrice) {
+        handleMessage('warning', 'Please enter new token price.');
+      } else {
+        setChangePriceBtnLoading(true);
+
+        const txn = await writerERC20.setTokenPrice(ethers.utils.parseEther(newTokenPrice));
+
+        const receipt = await txn.wait();
+
+        if (receipt.status === 1) {
+          setChangePriceBtnLoading(false);
+          handleMessage('success', 'Transaction successful!');
+        } else {
+          setChangePriceBtnLoading(false);
+          handleMessage('error', 'Transaction failed!');
+        }
+
+        setNewMint('');
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    } catch (e) {
+      console.log(e);
+
+      setChangePriceBtnLoading(false);
+      handleMessage('error', e.message);
+    }
+  };
+
+  const withdrawBalance = async () => {
+    try {
+      setWithdrawBtnLoading(true);
+
+      const txn = await writerERC20.withdrawBalance();
+
+      const receipt = await txn.wait();
+
+      if (receipt.status === 1) {
+        setWithdrawBtnLoading(false);
+        handleMessage('success', 'Transaction successful!');
+      } else {
+        setWithdrawBtnLoading(false);
+        handleMessage('error', 'Transaction failed!');
+      }
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (e) {
+      console.log(e);
+
+      setWithdrawBtnLoading(false);
       handleMessage('error', e.message);
     }
   };
@@ -236,18 +334,18 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
             <Description title='Token Symbol' content={!userTokenSymbol ? <Spinner /> : userTokenSymbol} />
             <Description title='Token Price' content={!userTokenPrice ? <Spinner /> : userTokenPrice} />
             <Description title='Total Minted' content={!userTokenTotalMinted ? <Spinner /> : userTokenTotalMinted} />
+            <Description title='Your Token Balance' content={!userTokenBalance ? <Spinner /> : userTokenBalance} />
             <Description
               title='Contract Balance'
               content={!userTokenContractBalance ? <Spinner /> : userTokenContractBalance}
             />
-            <Description title='Your Token Balance' content={!userTokenBalance ? <Spinner /> : userTokenBalance} />
           </div>
           <div className='writes'>
             <div className='write'>
               <Input
                 clearable
                 type='secondary'
-                placeholder='1000'
+                placeholder='No. of tokens: 1000'
                 onChange={(e) => setNewMint(e.target.value)}
                 width='80%'
               >
@@ -267,18 +365,25 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
               <Input
                 clearable
                 type='secondary'
-                placeholder='0x0'
+                placeholder='To Address: 0x0'
                 onChange={(e) => setTransferAddress(e.target.value)}
                 width='80%'
               >
                 Transfer Tokens
               </Input>
+              <Input
+                clearable
+                type='secondary'
+                placeholder='No.of tokens: 30'
+                onChange={(e) => setTransferAmount(e.target.value)}
+                width='80%'
+              />
               {transferBtnLoading ? (
                 <Button type='secondary' shadow loading className='btn' scale={0.8}>
                   Transfer
                 </Button>
               ) : (
-                <Button type='secondary' shadow className='btn' scale={0.8}>
+                <Button type='secondary' shadow className='btn' scale={0.8} onClick={transferTokens}>
                   Transfer
                 </Button>
               )}
@@ -287,7 +392,7 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
               <Input
                 clearable
                 type='secondary'
-                placeholder='0.003'
+                placeholder='Token Price: 0.003'
                 onChange={(e) => setNewTokenPrice(e.target.value)}
                 width='80%'
               >
@@ -298,7 +403,7 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
                   Change Price
                 </Button>
               ) : (
-                <Button type='secondary' shadow className='btn' scale={0.8}>
+                <Button type='secondary' shadow className='btn' scale={0.8} onClick={changeTokenPrice}>
                   Change Price
                 </Button>
               )}
@@ -310,7 +415,7 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
                 Widthdraw Balance
               </Button>
             ) : (
-              <Button type='secondary' shadow auto scale={0.8}>
+              <Button type='secondary' shadow auto scale={0.8} onClick={withdrawBalance}>
                 Widthdraw Balance
               </Button>
             )}
