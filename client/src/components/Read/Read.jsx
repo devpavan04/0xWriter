@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Identicon from 'react-identicons';
 import contractABI from '../../contracts/abi.json';
-import { getUser } from '../../lib/writer';
-import './read.css';
+import { getUserByDID } from '../../lib/threadDB';
+import './style.css';
 import { Button, Snippet, Text, Spinner, Fieldset, Card } from '@geist-ui/core';
 
 export const Read = ({ wallet, ceramic, writer, user, users, handleMessage }) => {
@@ -75,25 +75,27 @@ export const Read = ({ wallet, ceramic, writer, user, users, handleMessage }) =>
         const myWriting = allWriters.filter((writer) => writer.did === ceramic.did);
         setMyWriting(myWriting);
 
-        const mySubscribers = await Promise.all(
-          myWriting[0].subscribedBy.map(async (did) => {
-            let subscriberData = {
-              did: did,
-            };
+        if (myWriting[0]) {
+          const mySubscribers = await Promise.all(
+            myWriting[0].subscribedBy.map(async (did) => {
+              let subscriberData = {
+                did: did,
+              };
 
-            const user = await getUser(did);
-            subscriberData.address = user.address;
+              const user = await getUserByDID(did);
+              subscriberData.address = user.address;
 
-            const basicProfile = await ceramic.store.get('BasicProfileDefinition', did);
-            if (basicProfile !== undefined && basicProfile !== null) {
-              subscriberData.name = basicProfile.name;
-              subscriberData.description = basicProfile.description;
-              subscriberData.emoji = basicProfile.emoji;
-            }
+              const basicProfile = await ceramic.store.get('BasicProfileDefinition', did);
+              if (basicProfile !== undefined && basicProfile !== null) {
+                subscriberData.name = basicProfile.name;
+                subscriberData.description = basicProfile.description;
+                subscriberData.emoji = basicProfile.emoji;
+              }
 
-            return subscriberData;
-          })
-        );
+              return subscriberData;
+            })
+          );
+        }
 
         setMySubscribers(mySubscribers);
       }
@@ -111,7 +113,7 @@ export const Read = ({ wallet, ceramic, writer, user, users, handleMessage }) =>
             ) : (
               allWriters.map((writer) => {
                 return (
-                  <Card shadow width='100%'>
+                  <Card key={writer.address} shadow width='fit-content'>
                     <div className='writer'>
                       <div className='writer-identicon-profile'>
                         <div className='writer-identicon'>
@@ -137,7 +139,7 @@ export const Read = ({ wallet, ceramic, writer, user, users, handleMessage }) =>
                       </div>
                       <div className='writer-address-did'>
                         <div className='writer-did'>
-                          <Snippet type='lite' symbol='DID' text={ceramic.did} width='400px' />
+                          <Snippet symbol='DID' text={ceramic.did} width='400px' copy='prevent' />
                         </div>
                         <div className='writer-address'>
                           <Snippet type='lite' symbol='Address' text={wallet.address} width='400px' />

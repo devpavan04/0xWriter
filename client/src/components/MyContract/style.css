@@ -13,7 +13,7 @@
   display: grid;
   grid-template-columns: 1fr 2fr;
   column-gap: 4rem;
-  row-gap: 2rem;
+  row-gap: 1rem;
 }
 
 .reads {
@@ -27,7 +27,7 @@
 .writes {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 3rem;
   grid-column: 2/-1;
   grid-row: 1/2;
 }

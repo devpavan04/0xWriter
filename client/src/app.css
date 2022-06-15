@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inspiration&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&display=swap');
 
 .wrapper {
   width: 1000px;
@@ -19,7 +18,7 @@
 }
 
 .header-text {
-  font-family: 'Inspiration', cursive;
+  font-family: 'Tenor Sans', sans-serif;
   font-weight: bold;
-  font-size: 3.6rem !important;
+  font-size: 3rem !important;
 }

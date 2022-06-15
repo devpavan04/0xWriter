@@ -3,15 +3,15 @@ import { ethers } from 'ethers';
 import { web3Modal, connectWallet, disconectWallet } from './utils/wallet';
 import { connectCeramic } from './utils/ceramic';
 import { connectThreadDB } from './utils/threadDB';
-import { registerUser, getUser, setUserDeployedContractAddress, getUsers } from './lib/writer';
+import { registerUser, getUserByDID, setUserDeployedContractAddress, getUsers } from './lib/threadDB';
 import contractABI from './contracts/abi.json';
 import contractAddress from './contracts/address.json';
 import './app.css';
 import { Button, Text, Note, useToasts, Tabs, Loading, Spacer } from '@geist-ui/core';
 import { Home } from './components/Home';
 import { Write } from './components/Write';
-import { Contract } from './components/Contract';
-import { Dashboard } from './components/Dashboard';
+import { MyContract } from './components/MyContract';
+import { WriterContract } from './components/WriterContract';
 import { Read } from './components/Read';
 
 const App = () => {
@@ -65,10 +65,10 @@ const App = () => {
       await connectThreadDB(signer, address);
       setThreadDBConnected(true);
 
-      const user = await getUser(did);
+      const user = await getUserByDID(did);
       if (!user) {
         await registerUser(address, did);
-        const user = await getUser(did);
+        const user = await getUserByDID(did);
         setUser(user);
       }
       setUser(user);
@@ -95,6 +95,8 @@ const App = () => {
         setCeramicConnected(false);
         if (walletDisconnected) setWalletConnected(false);
       } else {
+        console.log(e);
+
         handleMessage('error', e.message);
       }
     }
@@ -105,7 +107,7 @@ const App = () => {
       <div className='header'>
         <div className='heading'>
           <Text p margin={0} className='header-text'>
-            0xWriter
+            0xW
           </Text>
         </div>
         <div className='connect-buttons'>
@@ -117,7 +119,7 @@ const App = () => {
             <>
               <Button
                 type='secondary'
-                shadow
+                ghost
                 scale={0.8}
                 auto
                 onClick={async () => {
@@ -150,7 +152,7 @@ const App = () => {
             Connecting to textile threadDB
           </Loading>
         ) : wallet.chainID !== 80001 ? (
-          <Note width='fit-content' margin='auto' marginTop='1rem' type='secondary' label={false}>
+          <Note width='fit-content' margin='auto' marginTop='1rem' label='Note '>
             Please connect to Mumbai Testnet.
           </Note>
         ) : (
@@ -162,7 +164,7 @@ const App = () => {
               </Tabs.Item>
               <Tabs.Item label='My Contract' value='2'>
                 <Spacer h={2} />
-                <Contract wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
+                <MyContract wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
               </Tabs.Item>
               <Tabs.Item label='Write' value='3'>
                 <Spacer h={1} />
@@ -179,9 +181,9 @@ const App = () => {
                   handleMessage={handleMessage}
                 />
               </Tabs.Item>
-              <Tabs.Item label='0xWriter Contract' value='5'>
+              <Tabs.Item label='Writer Contract' value='5'>
                 <Spacer h={2} />
-                <Dashboard wallet={wallet} writer={writer} handleMessage={handleMessage} />
+                <WriterContract wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
               </Tabs.Item>
             </Tabs>
           </>

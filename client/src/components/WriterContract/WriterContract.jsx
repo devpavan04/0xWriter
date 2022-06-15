@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Identicon from 'react-identicons';
-import contractABI from '../../contracts/abi.json';
-import './dashboard.css';
-import { Button, Spinner, Spacer, Table, Link, Description, Input, Snippet } from '@geist-ui/core';
+import { getUserByAddress } from '../../lib/threadDB';
+import './style.css';
+import { Button, Spinner, Card, Text, Description, Input, Snippet, Link } from '@geist-ui/core';
 
-export const Dashboard = ({ wallet, writer, handleMessage }) => {
-  const [owner, setOwner] = useState('');
+export const WriterContract = ({ wallet, ceramic, writer, handleMessage }) => {
+  const [writerContractAddress, setWriterContractAddress] = useState('');
+  const [ownerAddress, setOwnerAddress] = useState('');
+  const [ownerDID, setOwnerDID] = useState('');
+  const [ownerBasicProfile, setOwnerBasicProfile] = useState('');
   const [userIsOwner, setUserIsOwner] = useState(false);
   const [contractBalance, setContractBalance] = useState('');
   const [deploymentFee, setDeploymentFee] = useState('');
-  const [writers, setWriters] = useState([]);
   const [getterAddress, setGetterAddress] = useState('');
   const [newDeploymentFee, setNewDeploymentFee] = useState('');
   const [deployedContractAddress, setDeployedContractAddress] = useState('');
@@ -21,30 +23,24 @@ export const Dashboard = ({ wallet, writer, handleMessage }) => {
   useEffect(() => {
     async function init() {
       if (writer !== undefined) {
-        const owner = await writer.owner();
-        setOwner(owner);
-        if (owner === wallet.address) setUserIsOwner(true);
+        const writerContractAddress = await writer.address;
+        setWriterContractAddress(writerContractAddress);
+        const ownerAddress = await writer.owner();
+        setOwnerAddress(ownerAddress);
+        if (ownerAddress === wallet.address) setUserIsOwner(true);
         const contractBalance = await writer.getContractBalance();
         setContractBalance(ethers.utils.formatEther(contractBalance));
         const deploymentFee = await writer.getDeploymentFee();
         setDeploymentFee(ethers.utils.formatEther(deploymentFee));
 
-        let writers = await writer.getWriters();
-        writers = await Promise.all(
-          writers.map(async (writer) => {
-            const writerERC20 = new ethers.Contract(
-              writer.writerDeployedContractAddress,
-              contractABI.writerERC20,
-              wallet.injectedProvider
-            );
-            return Object.assign({}, writer, {
-              tokenName: await writerERC20.name(),
-              tokenSymbol: await writerERC20.symbol(),
-              tokenPrice: ethers.utils.formatEther(await writerERC20.getTokenPrice()) + ' MATIC',
-            });
-          })
-        );
-        setWriters(writers);
+        const owner = await getUserByAddress(ownerAddress);
+        const ownerDID = owner.did;
+        setOwnerDID(ownerDID);
+
+        const ownerBasicProfile = await ceramic.store.get('BasicProfileDefinition', owner.did);
+        if (ownerBasicProfile !== undefined && ownerBasicProfile !== null) {
+          setOwnerBasicProfile(ownerBasicProfile);
+        }
       }
     }
     init();
@@ -141,38 +137,69 @@ export const Dashboard = ({ wallet, writer, handleMessage }) => {
     }
   };
 
-  const renderAddress = (value) => {
-    return (
-      <div className='writers-address-identicon'>
-        <Identicon string={value} size='20' />
-        {value.substr(0, 10) + '....' + value.slice(value.length - 8)}
-      </div>
-    );
-  };
-
-  const renderDID = (value) => {
-    return <>{value.substr(0, 10) + '....' + value.slice(value.length - 8)}</>;
-  };
-
-  const renderContractAddress = (value) => {
-    return (
-      <Link href={`https://mumbai.polygonscan.com/address/${value}`} target={'_blank'} icon>
-        Polygonscan
-      </Link>
-    );
-  };
-
   return (
-    <div className='dashboard-content'>
-      <div className='dashboard-reads'>
-        <div className='address-identicon'>
-          {!owner ? <Spinner /> : <Identicon string={owner} size='40' />}
-          <Spacer />
-          <Description
-            title={owner && owner === wallet.address ? 'Owner (You)' : 'Owner'}
-            content={!owner ? <Spinner /> : owner.substr(0, 12) + '....' + owner.slice(owner.length - 12)}
-          />
-        </div>
+    <div className='writer-contract-content'>
+      <div className='writer-contract-reads'>
+        <Description
+          title={wallet.address === ownerAddress ? 'Owner (You)' : 'Owner'}
+          content={
+            ownerBasicProfile ? (
+              <Card shadow marginTop='0.5' width='fit-content'>
+                <div className='owner'>
+                  <div className='owner-identicon-profile'>
+                    <div className='owner-identicon'>
+                      <Identicon string={ownerAddress} bg='#eef' size='40' />
+                    </div>
+                    <div className='owner-basic-profile'>
+                      <div className='owner-name'>
+                        {ownerBasicProfile.name ? (
+                          <Text margin='0' b>
+                            {ownerBasicProfile.name}
+                          </Text>
+                        ) : (
+                          <Text margin='0'>--</Text>
+                        )}
+                      </div>
+                      <div className='owner-description'>
+                        <Text margin='0'>{ownerBasicProfile.description ? ownerBasicProfile.description : '--'}</Text>
+                      </div>
+                      <div className='owner-emoji'>
+                        <Text margin='0'>{ownerBasicProfile.emoji ? ownerBasicProfile.emoji : '--'}</Text>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='owner-address-did'>
+                    <div className='owner-did'>
+                      <Snippet symbol='DID' text={ownerDID} width='400px' copy='prevent' />
+                    </div>
+                    <div className='owner-address'>
+                      <Snippet type='lite' symbol='Address' text={ownerAddress} width='400px' />
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <Spinner />
+            )
+          }
+        />
+        <Description
+          title='Contract'
+          content={
+            !writerContractAddress ? (
+              <Spinner />
+            ) : (
+              <Link
+                href={`https://mumbai.polygonscan.com/address/${writerContractAddress}`}
+                target={'_blank'}
+                icon
+                style={{ color: '#7B3FE4', fontWeight: 'bold' }}
+              >
+                Polygonscan
+              </Link>
+            )
+          }
+        />
         <div className='contract-balance-and-withdraw'>
           <Description title='Contract Balance' content={!contractBalance ? <Spinner /> : contractBalance + ' MATIC'} />
           {userIsOwner ? (
@@ -190,7 +217,7 @@ export const Dashboard = ({ wallet, writer, handleMessage }) => {
           ) : null}
         </div>
         <Description title='Deployment Fee' content={!deploymentFee ? <Spinner /> : deploymentFee + ' MATIC'} />
-        <div className='dashboard-read'>
+        <div className='writer-contract-read'>
           <Input
             clearable
             onClearClick={() => setDeployedContractAddress('')}
@@ -211,13 +238,13 @@ export const Dashboard = ({ wallet, writer, handleMessage }) => {
             </Button>
           )}
           {!deployedContractAddress ? null : (
-            <Snippet type='secondary' symbol='' text={deployedContractAddress} width='300px' />
+            <Snippet type='lite' symbol='' text={deployedContractAddress} width='300px' />
           )}
         </div>
       </div>
-      <div className='dashboard-writes'>
+      <div className='writer-contract-writes'>
         {userIsOwner ? (
-          <div className='dashboard-write'>
+          <div className='writer-contract-write'>
             <Input
               clearable
               type='secondary'
@@ -239,25 +266,6 @@ export const Dashboard = ({ wallet, writer, handleMessage }) => {
           </div>
         ) : null}
       </div>
-      {/* <div className='dashboard-deployers'>
-        <Description
-          title='Writers'
-          content={
-            writers.length < 1 ? (
-              <Spinner />
-            ) : (
-              <Table data={writers} marginTop='0.6'>
-                <Table.Column prop='writerAddress' label='Address' render={renderAddress} />
-                <Table.Column prop='writerDID' label='DID' render={renderDID} />
-                <Table.Column prop='tokenName' label='Name' />
-                <Table.Column prop='tokenSymbol' label='Symbol' />
-                <Table.Column prop='tokenPrice' label='Price' />
-                <Table.Column prop='writerDeployedContractAddress' label='Contract' render={renderContractAddress} />
-              </Table>
-            )
-          }
-        />
-      </div> */}
     </div>
   );
 };

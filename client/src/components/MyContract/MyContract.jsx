@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import contractABI from '../../contracts/abi.json';
-import './contract.css';
-import { Button, Spacer, Spinner, Note, Tag, Description, Input, Link, Divider, Text } from '@geist-ui/core';
+import './style.css';
+import { Button, Spacer, Spinner, Note, Tag, Description, Input, Link } from '@geist-ui/core';
 
-export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
+export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
   const [tokenName, setTokenName] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [tokenPrice, setTokenPrice] = useState('');
@@ -247,71 +247,7 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
 
   return (
     <div className='contract-content'>
-      {!userHasDeployed ? (
-        <>
-          <Note width='fit-content' margin='auto' type='secondary' label={false}>
-            Deploy ERC20 contract to create token gated access to your blog.
-          </Note>
-          <Spacer h={2} />
-          <Description
-            title='Deployment Fee'
-            content={
-              !deploymentFee ? <Spinner /> : <Tag type='lite'>{ethers.utils.formatEther(deploymentFee) + ' MATIC'}</Tag>
-            }
-          />
-          <Spacer h={2} />
-          <div className='contract-form'>
-            <Input value='ERC20' readOnly type='secondary' width='50%'>
-              Contract Type
-            </Input>
-            <Input
-              clearable
-              type='secondary'
-              placeholder='Token'
-              onChange={(e) => setTokenName(e.target.value)}
-              width='50%'
-            >
-              Token Name
-            </Input>
-            <Input
-              clearable
-              type='secondary'
-              placeholder='TKN'
-              onChange={(e) => setTokenSymbol(e.target.value)}
-              width='50%'
-            >
-              Token Symbol
-            </Input>
-            <Input
-              clearable
-              type='secondary'
-              placeholder='0.02'
-              onChange={(e) => setTokenPrice(e.target.value)}
-              width='50%'
-            >
-              Token Price (MATIC)
-            </Input>
-            <Input
-              clearable
-              type='secondary'
-              placeholder='1000'
-              onChange={(e) => setInitialMinit(e.target.value)}
-              width='50%'
-            >
-              Initial Mint
-            </Input>
-            {deployBtnLoading ? (
-              <Button type='secondary' shadow loading scale={0.8} className='btn' onClick={deployWriterERC20Contract}>
-                Deploy Contract
-              </Button>
-            ) : (
-              <Button type='secondary' shadow scale={0.8} className='btn' onClick={deployWriterERC20Contract}>
-                Deploy Contract
-              </Button>
-            )}
-          </div>
-        </>
-      ) : (
+      {userHasDeployed ? (
         <div className='user-contract-content'>
           <div className='reads'>
             <Description
@@ -324,6 +260,7 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
                     href={`https://mumbai.polygonscan.com/address/${userDeployedContractAddress}`}
                     target={'_blank'}
                     icon
+                    style={{ color: '#7B3FE4', fontWeight: 'bold' }}
                   >
                     Polygonscan
                   </Link>
@@ -421,6 +358,70 @@ export const Contract = ({ wallet, ceramic, writer, handleMessage }) => {
             )}
           </div>
         </div>
+      ) : (
+        <>
+          <Note width='fit-content' margin='auto' label='Note '>
+            Deploy ERC20 contract to create token gated access to your blog.
+          </Note>
+          <Spacer h={2} />
+          <Description
+            title='Deployment Fee'
+            content={
+              !deploymentFee ? <Spinner /> : <Tag type='lite'>{ethers.utils.formatEther(deploymentFee) + ' MATIC'}</Tag>
+            }
+          />
+          <Spacer h={2} />
+          <div className='contract-form'>
+            <Input value='ERC20' readOnly type='secondary' width='50%'>
+              Contract Type
+            </Input>
+            <Input
+              clearable
+              type='secondary'
+              placeholder='Token'
+              onChange={(e) => setTokenName(e.target.value)}
+              width='50%'
+            >
+              Token Name
+            </Input>
+            <Input
+              clearable
+              type='secondary'
+              placeholder='TKN'
+              onChange={(e) => setTokenSymbol(e.target.value)}
+              width='50%'
+            >
+              Token Symbol
+            </Input>
+            <Input
+              clearable
+              type='secondary'
+              placeholder='0.02'
+              onChange={(e) => setTokenPrice(e.target.value)}
+              width='50%'
+            >
+              Token Price (MATIC)
+            </Input>
+            <Input
+              clearable
+              type='secondary'
+              placeholder='1000'
+              onChange={(e) => setInitialMinit(e.target.value)}
+              width='50%'
+            >
+              Initial Mint
+            </Input>
+            {deployBtnLoading ? (
+              <Button type='secondary' shadow loading scale={0.8} className='btn' onClick={deployWriterERC20Contract}>
+                Deploy Contract
+              </Button>
+            ) : (
+              <Button type='secondary' shadow scale={0.8} className='btn' onClick={deployWriterERC20Contract}>
+                Deploy Contract
+              </Button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

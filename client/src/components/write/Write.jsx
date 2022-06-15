@@ -3,7 +3,7 @@ import EditorJS from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import Delimiter from '@editorjs/delimiter';
 import Marker from '@editorjs/marker';
-import './write.css';
+import './style.css';
 import { Button, Spacer } from '@geist-ui/core';
 
 const intitalEditorContent = () => {
