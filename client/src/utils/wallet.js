@@ -34,7 +34,8 @@ export const connectWallet = async () => {
 
 export const disconectWallet = async () => {
   let walletDisconnected = false,
-    threadDBDisconnected = false;
+    threadDBDisconnected = false,
+    litDisconnected = false;
 
   const credentials = JSON.parse(localStorage.getItem('payload'));
 
@@ -44,9 +45,17 @@ export const disconectWallet = async () => {
     threadDBDisconnected = true;
   }
 
+  const litAuthSignature = JSON.parse(localStorage.getItem('lit-auth-signature'));
+
+  if (litAuthSignature !== null) {
+    localStorage.removeItem('lit-auth-signature');
+
+    litDisconnected = true;
+  }
+
   await web3Modal.clearCachedProvider();
 
   walletDisconnected = true;
 
-  return { threadDBDisconnected, walletDisconnected };
+  return { threadDBDisconnected, litDisconnected, walletDisconnected };
 };

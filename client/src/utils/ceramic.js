@@ -32,7 +32,7 @@ export const connectCeramic = async (provider, address) => {
 
     // USING DID Datastore
     const store = new DIDDataStore({ ceramic, model: modelAliases });
-    const basicProfile = await store.get('BasicProfileDefinition');
+    const basicProfile = await store.get('basicProfile');
     // USING DID Datastore
 
     return {

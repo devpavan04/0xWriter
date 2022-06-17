@@ -37,7 +37,7 @@ export const WriterContract = ({ wallet, ceramic, writer, handleMessage }) => {
         const ownerDID = owner.did;
         setOwnerDID(ownerDID);
 
-        const ownerBasicProfile = await ceramic.store.get('BasicProfileDefinition', owner.did);
+        const ownerBasicProfile = await ceramic.store.get('basicProfile', owner.did);
         if (ownerBasicProfile !== undefined && ownerBasicProfile !== null) {
           setOwnerBasicProfile(ownerBasicProfile);
         }

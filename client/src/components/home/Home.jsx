@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import Identicon from 'react-identicons';
 import './style.css';
 import { Button, Text, Card, Note, Tag, Description, Modal, useModal, Input, Snippet } from '@geist-ui/core';
-import { Info } from '@geist-ui/icons';
 
 export const Home = ({ wallet, ceramic, handleMessage }) => {
   const { setVisible, bindings } = useModal();
@@ -34,7 +33,7 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
       } else {
         setUpdateProfileBtnLoading(true);
 
-        await ceramic.store.set('BasicProfileDefinition', {
+        await ceramic.store.set('basicProfile', {
           name,
           description,
           emoji,

@@ -360,10 +360,11 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
         </div>
       ) : (
         <>
-          <Note width='fit-content' margin='auto' label='Note '>
-            Deploy ERC20 contract to create token gated access to your blog.
+          <Note width='fit-content' label='Note '>
+            To start writing your blog, you must first deploy an ERC20 contract (WriterERC20) to create a token gated
+            access to your blog.
           </Note>
-          <Spacer h={2} />
+          <Spacer h={3} />
           <Description
             title='Deployment Fee'
             content={

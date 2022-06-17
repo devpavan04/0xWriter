@@ -1,11 +1,11 @@
 {
   "definitions": {
-    "BasicProfileDefinition": "kjzl6cwe1jw147y84ysuq6jj98cv67t3h3jysyefw4cehjebunk1gihmxbja6wp",
-    "WriterDataDefinition": "kjzl6cwe1jw146vrvlwxunjdjamlgezb69px7bpvbp68xcw2h77ls6vqa9u19j8"
+    "basicProfile": "kjzl6cwe1jw145v2zsdl7dy2bb4x61jxly6ixrl46dedwdh0tulrk69itilp5xh",
+    "writerData": "kjzl6cwe1jw14bj4b55agxcinvjf66ew53q9bglmds8clu36jm50ocj414l6y6k"
   },
   "schemas": {
-    "BasicProfileSchema": "ceramic://k3y52l7qbv1frxshi9xcdvcbzm6vrdgzfeq6b0y0omrhudfe20bfdz3e86jujqc5c",
-    "WriterDataSchema": "ceramic://k3y52l7qbv1frxzb76k6v0xqq2hxlxx6i14bt7gnzd67h8gpp276ahhltzhgn8xz4"
+    "WriterData": "ceramic://k3y52l7qbv1frxi247gynugnuh8yndtbyrm1ogfzgoj85awfpqoviuiqpnqbi4oow",
+    "BasicProfile": "ceramic://k3y52l7qbv1frypcc6ddlytdoioxt9i7rm28r3uty0wqo7ohvui6vwaff0ggx2xvk"
   },
   "tiles": {}
 }

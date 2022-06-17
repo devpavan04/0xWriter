@@ -7,14 +7,32 @@
 .writer {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.8rem;
   font-size: 0.9rem !important;
+}
+
+.writer-details {
+  display: flex;
+  justify-content: space-between;
+}
+
+.back-btn-writer-card-top-right {
+  display: flex;
+  justify-content: space-between;
 }
 
 .writer-identicon-profile {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.writer-card-top-right {
+  padding-right: 0.8rem;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: flex-start;
+  padding: 0.6rem 0 0;
 }
 
 .writer-basic-profile {
@@ -26,4 +44,25 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+}
+
+.writer-deployed-contract-address {
+  display: flex;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.view-profile {
+  text-align: right;
+  padding: 0.8rem 0 0.2rem;
+}
+
+.all-writers-back-btn:hover {
+  cursor: pointer;
+}
+
+.back-click {
+  display: flex;
+  justify-content: center;
+  align-items: center !important;
 }

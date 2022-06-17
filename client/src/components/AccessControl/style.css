@@ -1,0 +1,30 @@
+.user-access-control-content {
+  margin-top: 3rem;
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  column-gap: 4rem;
+}
+
+.access-control-reads {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  grid-column: 1/2;
+  grid-row: 1/2;
+}
+
+.access-control-writes {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  grid-column: 2/-1;
+  grid-row: 1/2;
+}
+
+.access-contrl-write {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  margin-left: 3rem;
+}

@@ -4,17 +4,15 @@
   "properties": {
     "encryptedPosts": {
       "type": "array",
-      "items": [
-        {
-          "type": "string"
-        }
-      ]
+      "items": {}
     },
     "encryptedSymmetricKey": {
-      "type": "string"
+      "type": "array",
+      "items": {}
     },
     "accessControlConditions": {
-      "type": "string"
+      "type": "array",
+      "items": {}
     }
   }
 }

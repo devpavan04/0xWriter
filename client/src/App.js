@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { web3Modal, connectWallet, disconectWallet } from './utils/wallet';
+import LitJsSdk from 'lit-js-sdk';
 import { connectCeramic } from './utils/ceramic';
 import { connectThreadDB } from './utils/threadDB';
 import { registerUser, getUserByDID, setUserDeployedContractAddress, getUsers } from './lib/threadDB';
@@ -13,6 +14,7 @@ import { Write } from './components/Write';
 import { MyContract } from './components/MyContract';
 import { WriterContract } from './components/WriterContract';
 import { Read } from './components/Read';
+import { AccessControl } from './components/AccessControl';
 
 const App = () => {
   const { setToast } = useToasts({ placement: 'bottomRight', padding: '1rem' });
@@ -28,6 +30,8 @@ const App = () => {
   const [user, setUser] = useState();
   const [users, setUsers] = useState();
   const [writer, setWriter] = useState();
+  const [authSig, setAuthSig] = useState();
+  const [litConnected, setLitConnected] = useState(false);
 
   useEffect(() => {
     function init() {
@@ -84,6 +88,15 @@ const App = () => {
 
       const users = await getUsers();
       setUsers(users);
+
+      // List Protocol connection
+      const client = new LitJsSdk.LitNodeClient();
+      await client.connect();
+      window.litNodeClient = client;
+
+      const authSig = await LitJsSdk.checkAndSignAuthMessage({ chain: 'mumbai' });
+      setAuthSig(authSig);
+      setLitConnected(true);
     } catch (e) {
       console.log(e);
 
@@ -123,9 +136,10 @@ const App = () => {
                 scale={0.8}
                 auto
                 onClick={async () => {
-                  const { threadDBDisconnected, walletDisconnected } = await disconectWallet();
+                  const { threadDBDisconnected, litDisconnected, walletDisconnected } = await disconectWallet();
                   if (threadDBDisconnected) setThreadDBConnected(false);
                   setCeramicConnected(false);
+                  if (litDisconnected) setLitConnected(false);
                   if (walletDisconnected) setWalletConnected(false);
                 }}
               >
@@ -135,6 +149,7 @@ const App = () => {
           )}
         </div>
       </div>
+
       <div className='content'>
         {!walletConnected ? (
           <>
@@ -151,6 +166,10 @@ const App = () => {
           <Loading type='secondary' spaceRatio={2.5} marginTop='1rem'>
             Connecting to textile threadDB
           </Loading>
+        ) : !litConnected ? (
+          <Loading type='secondary' spaceRatio={2.5} marginTop='1rem'>
+            Connecting to lit protocol
+          </Loading>
         ) : wallet.chainID !== 80001 ? (
           <Note width='fit-content' margin='auto' marginTop='1rem' label='Note '>
             Please connect to Mumbai Testnet.
@@ -166,11 +185,21 @@ const App = () => {
                 <Spacer h={2} />
                 <MyContract wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
               </Tabs.Item>
-              <Tabs.Item label='Write' value='3'>
-                <Spacer h={1} />
-                <Write wallet={wallet} />
+              <Tabs.Item label='Access Control' value='3'>
+                <Spacer h={2} />
+                <AccessControl wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
               </Tabs.Item>
-              <Tabs.Item label='Read' value='4'>
+              <Tabs.Item label='Write' value='4'>
+                <Spacer h={1} />
+                <Write
+                  wallet={wallet}
+                  ceramic={ceramic}
+                  writer={writer}
+                  authSig={authSig}
+                  handleMessage={handleMessage}
+                />
+              </Tabs.Item>
+              <Tabs.Item label='Read' value='5'>
                 <Spacer h={2} />
                 <Read
                   wallet={wallet}
@@ -181,7 +210,7 @@ const App = () => {
                   handleMessage={handleMessage}
                 />
               </Tabs.Item>
-              <Tabs.Item label='Writer Contract' value='5'>
+              <Tabs.Item label='0xWriter Contract' value='6'>
                 <Spacer h={2} />
                 <WriterContract wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
               </Tabs.Item>
