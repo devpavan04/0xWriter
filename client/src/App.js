@@ -89,7 +89,7 @@ const App = () => {
       const users = await getUsers();
       setUsers(users);
 
-      // List Protocol connection
+      // Lit Protocol connection
       const client = new LitJsSdk.LitNodeClient();
       await client.connect();
       window.litNodeClient = client;

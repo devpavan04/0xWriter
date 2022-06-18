@@ -11,6 +11,7 @@
     "@editorjs/editorjs": "^2.24.3",
     "@editorjs/header": "^2.6.2",
     "@editorjs/marker": "^1.2.2",
+    "@editorjs/paragraph": "^2.8.0",
     "@geist-ui/core": "^2.3.8",
     "@geist-ui/icons": "^1.0.2",
     "@glazed/did-datastore": "^0.3.1",
@@ -21,6 +22,7 @@
     "@walletconnect/web3-provider": "^1.7.8",
     "ethers": "^5.6.5",
     "key-did-resolver": "^2.0.0",
+    "lit-ceramic-sdk": "^1.1.13",
     "lit-js-sdk": "^1.1.182",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
@@ -28,6 +30,7 @@
     "react-scripts": "^4.0.3",
     "socket.io-client": "^4.5.1",
     "web-vitals": "^2.1.4",
+    "web3.storage": "^4.2.0",
     "web3modal": "^1.9.7"
   },
   "scripts": {
