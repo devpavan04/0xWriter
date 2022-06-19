@@ -4,12 +4,16 @@ import Header from '@editorjs/header';
 import Delimiter from '@editorjs/delimiter';
 import Marker from '@editorjs/marker';
 import Paragraph from '@editorjs/paragraph';
-import { encryptPostsWithLit, decryptPostsWithLit } from '../../lib/lit';
-import { storeFile, retrieveFile } from '../../lib/web3-storage';
-import { dataURItoBlob } from '../../utils/blob-string';
+import {
+  encryptedPostsBlobToBase64,
+  encryptedPostsBase64ToBlob,
+  encryptPostsWithLit,
+  decryptPostsWithLit,
+} from '../../lib/lit';
+import { convertCleanDataToHTML } from '../../utils/markup-parser';
 import './style.css';
-import { Button, Spacer, Note, Fieldset } from '@geist-ui/core';
-import { ChevronsRight, ChevronsDown } from '@geist-ui/icons';
+import { Button, Card, Note, Text, Fieldset, Divider, Badge, Dot, Spacer } from '@geist-ui/core';
+import { ChevronsRight, ChevronsDown, Edit, Trash } from '@geist-ui/icons';
 
 export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
   const editorJS = useRef();
@@ -20,24 +24,26 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
   const [userEncryptedPosts, setUserEncryptedPosts] = useState();
   const [userDecryptedPosts, setUserDecryptedPosts] = useState([]);
   const [userHasSetAccessControlConditions, setUserHasSetAccessControlConditions] = useState(false);
-  const [editorIsOpen, setEditorIsOpen] = useState(false);
+  const [editorIsOpen, setEditorIsOpen] = useState(true);
   const [selectedPostToEditID, setSelectedPostToEditID] = useState();
   const [publishBtnLoading, setPublishBtnLoading] = useState(false);
 
-  const initializeEditor = (editorType, content) => {
+  const initializeEditor = (editorType, prevContent) => {
+    console.log(prevContent);
     const editor = new EditorJS({
-      holder: 'editorjs',
+      holder: editorType === 'new' ? 'newEditor' : editorType === 'edit' ? 'editEditor' : 'editorjs',
       logLevel: 'ERROR',
-      data: content,
+      data: prevContent.data !== undefined ? prevContent.data : prevContent,
       onReady: () => {
         editorJS.current = editor;
       },
       onChange: async () => {
         let content = await editor.saver.save();
+        console.log(content);
         if (editorType === 'new') {
           window.localStorage.setItem(`editorDraft-new-${wallet.address}`, JSON.stringify(content));
         } else if (editorType === 'edit') {
-          window.localStorage.setItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`, JSON.stringify(content));
+          window.localStorage.setItem(`editorDraft-${prevContent.id}-${wallet.address}`, JSON.stringify(content));
         }
       },
       autofocus: false,
@@ -71,7 +77,8 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
         initializeEditor(editorType, JSON.parse(draft));
       }
     } else if (editorType === 'edit') {
-      let draft = window.localStorage.getItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
+      let draft = window.localStorage.getItem(`editorDraft-${content.id}-${wallet.address}`);
+      console.log(draft);
       if (draft === null) {
         initializeEditor(editorType, content);
       } else {
@@ -84,7 +91,25 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
     setEditorIsOpen(false);
   };
 
-  const publishPost = async (postType) => {
+  const clearEditor = (editorType) => {
+    if (editorType === 'new') {
+      let draft = window.localStorage.getItem(`editorDraft-new-${wallet.address}`);
+
+      if (draft !== null) {
+        window.localStorage.removeItem(`editorDraft-new-${wallet.address}`);
+        editorJS.current.clear();
+      }
+    } else if (editorType === 'edit') {
+      let draft = window.localStorage.getItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
+
+      if (draft !== null) {
+        window.localStorage.removeItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
+        closeEditor();
+      }
+    }
+  };
+
+  const publishPost = async (postType, postContent) => {
     try {
       let finalDraft;
 
@@ -106,67 +131,41 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
         setPublishBtnLoading(true);
 
         let newPosts = [...userDecryptedPosts];
-        let postID;
 
         if (postType === 'new') {
           const newPost = {
             id: newPosts.length + 1,
-            data: finalDraft.blocks,
+            data: finalDraft,
           };
 
           newPosts.push(newPost);
-
-          postID = newPost.id;
         } else if (postType === 'edit') {
           const editedPost = {
             id: Number(selectedPostToEditID),
-            data: finalDraft.blocks,
+            data: finalDraft,
           };
 
-          newPosts[Number(selectedPostToEditID) - 1] = editedPost;
+          const postToEdit = newPosts.filter((post) => post.id === Number(selectedPostToEditID));
+          const postToEditIndex = newPosts.indexOf(postToEdit[0]);
 
-          postID = editedPost.id;
+          newPosts[postToEditIndex] = editedPost;
         }
 
-        // encrypt newPosts
         const { encryptedPosts, encryptedSymmetricKey } = await encryptPostsWithLit(
           JSON.stringify(newPosts),
           userAccessControlConditions,
           authSig
         );
 
-        // const reader = new FileReader();
-        // reader.onload = async (e) => {
-        //   // const b = await dataURItoBlob(event.target.result);
-        // };
-        // reader.readAsDataURL(encryptedPosts);
+        const encryptedPostsBase64 = await encryptedPostsBlobToBase64(encryptedPosts);
 
-        const encryptedPostsFile = new File([encryptedPosts], `${ceramic.did}-posts.json`);
-        const cid = await storeFile(encryptedPostsFile);
-
-        console.log(cid);
-
-        // await ceramic.store.merge('writerData', {
-        //   encryptedPosts: [e.target.result],
-        // });
+        await ceramic.store.merge('writerData', {
+          encryptedPosts: [encryptedPostsBase64],
+        });
 
         await ceramic.store.merge('writerData', {
           encryptedSymmetricKey: [encryptedSymmetricKey],
         });
-
-        const wd = await ceramic.store.get('writerData', ceramic.did);
-        if (wd.accessControlConditions && wd.encryptedSymmetricKey && wd.encryptedPosts) {
-          const encryptedPostsFilee = await retrieveFile(cid);
-          console.log(encryptedPostsFilee);
-          // const userDecryptedPosts = await decryptPostsWithLit(
-          //   encryptedPostsFilee,
-          //   wd.encryptedSymmetricKey[0],
-          //   wd.accessControlConditions[0],
-          //   authSig
-          // );
-          // setUserDecryptedPosts(userDecryptedPosts);
-          // console.log(userDecryptedPosts);
-        }
 
         setPublishBtnLoading(false);
 
@@ -176,11 +175,17 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
           handleMessage('success', 'Post successfully edited!');
         }
 
+        if (postType === 'new') {
+          clearEditor(postType);
+        } else if (postType === 'edit') {
+          clearEditor(postType);
+        }
+
         setSelectedPostToEditID(0);
 
-        // setTimeout(() => {
-        //   window.location.reload();
-        // }, 1000);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
     } catch (e) {
       console.log(e);
@@ -190,24 +195,84 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
     }
   };
 
-  // for new
-  const clearEditor = () => {
-    let draft = window.localStorage.getItem(`editorDraft-new-${wallet.address}`);
+  const handleEdit = async (post) => {
+    setSelectedPostToEditID(post.id);
+    openEditor('edit', post);
+  };
 
-    if (draft !== null) {
-      window.localStorage.removeItem(`editorDraft-new-${wallet.address}`);
-      editorJS.current.clear();
+  const deletePost = async (postToDelete) => {
+    try {
+      let draft = window.localStorage.getItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
+
+      if (draft !== null) {
+        window.localStorage.removeItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
+      }
+
+      let newPosts = [...userDecryptedPosts];
+
+      newPosts = newPosts.filter((post) => post.id !== postToDelete.id);
+
+      const { encryptedPosts, encryptedSymmetricKey } = await encryptPostsWithLit(
+        JSON.stringify(newPosts),
+        userAccessControlConditions,
+        authSig
+      );
+
+      const encryptedPostsBase64 = await encryptedPostsBlobToBase64(encryptedPosts);
+
+      await ceramic.store.merge('writerData', {
+        encryptedPosts: [encryptedPostsBase64],
+      });
+
+      await ceramic.store.merge('writerData', {
+        encryptedSymmetricKey: [encryptedSymmetricKey],
+      });
+
+      handleMessage('success', 'Post successfully deleted!');
+
+      setSelectedPostToEditID(0);
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (e) {
+      console.log(e);
+
+      handleMessage('error', e.message);
     }
   };
 
-  // for edited
   const resetEditor = () => {
-    // reset to old post before changes
     let draft = window.localStorage.getItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
 
     if (draft !== null) {
       window.localStorage.removeItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
     }
+
+    closeEditor();
+
+    editorJS.current.destroy();
+    editorJS.current = null;
+
+    const prevContentPost = userDecryptedPosts.filter((post) => post.id === Number(selectedPostToEditID));
+    const prevContentPostIndex = userDecryptedPosts.indexOf(prevContentPost[0]);
+
+    const content = userDecryptedPosts[prevContentPostIndex];
+
+    openEditor('edit', content);
+  };
+
+  const handleFieldChange = (value) => {
+    if (value === 'New') {
+      openEditor('new');
+    } else {
+      closeEditor();
+    }
+  };
+
+  const convertToDate = (epoch) => {
+    const date = new Date(epoch);
+    return date.toDateString();
   };
 
   useEffect(() => {
@@ -242,32 +307,18 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
               }
 
               if (writerData.accessControlConditions && writerData.encryptedSymmetricKey && writerData.encryptedPosts) {
-                console.log(writerData.encryptedPosts[0]);
-                console.log(writerData.encryptedSymmetricKey[0]);
-                console.log(writerData.accessControlConditions[0]);
-                console.log(authSig);
-                // const userDecryptedPosts = await decryptPostsWithLit(
-                //   writerData.encryptedPosts[0],
-                //   writerData.encryptedSymmetricKey[0],
-                //   writerData.accessControlConditions[0],
-                //   authSig
-                // );
-                // setUserDecryptedPosts(userDecryptedPosts);
-                // console.log(userDecryptedPosts);
-
-                // const obj = { hello: 'world, hello!' };
-                // const blob = new Blob([JSON.stringify(obj)], { type: 'application/json' });
-                // const myfile = new File([blob], 'hi.json');
-                // const cid = await storeFile(myfile);
-                // console.log(cid);
-
-                // bafybeifgppsayvlyrgh2vs6nluuagrpz2swame5uxl4dp5cwomkui3zaza
-
-                const retFile = await retrieveFile('bafybeifgppsayvlyrgh2vs6nluuagrpz2swame5uxl4dp5cwomkui3zaza');
-                console.log(retFile);
+                const encryptedPostsBlob = encryptedPostsBase64ToBlob(writerData.encryptedPosts[0]);
+                const userDecryptedPosts = await decryptPostsWithLit(
+                  encryptedPostsBlob,
+                  writerData.encryptedSymmetricKey[0],
+                  writerData.accessControlConditions[0],
+                  authSig
+                );
+                setUserDecryptedPosts(JSON.parse(userDecryptedPosts.decryptedPosts));
               }
             }
           }
+          openEditor('new');
         }
       } catch (e) {
         console.log(e);
@@ -303,11 +354,13 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
         </>
       ) : userHasDeployed && userHasSetAccessControlConditions ? (
         <>
-          <Fieldset.Group value='Write'>
-            <Fieldset label='Write'>
+          <Fieldset.Group value='New' onChange={handleFieldChange}>
+            <Fieldset label='New'>
               {!editorIsOpen ? (
                 <div className='editor-close-section'>
                   <div className='open-editor-btn'>
+                    <ChevronsRight />
+                    <ChevronsRight />
                     <ChevronsRight />
                     <Button type='secondary' shadow auto marginRight='2.8' onClick={() => openEditor('new')}>
                       Open Editor
@@ -322,32 +375,78 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
                       Close Editor
                     </Button>
                   </div>
-                  <div id='editorjs'></div>
+                  <div id='newEditor'></div>
                   <div className='delete-and-save-btns'>
-                    <Button type='error' ghost onClick={() => clearEditor()} auto>
+                    <Button type='error' ghost onClick={() => clearEditor('new')} auto>
                       delete
                     </Button>
-                    <Button type='secondary' shadow onClick={() => publishPost('new')} auto>
-                      Publish
-                    </Button>
+                    {publishBtnLoading ? (
+                      <Button type='secondary' shadow loading auto>
+                        Publish
+                      </Button>
+                    ) : (
+                      <Button type='secondary' shadow onClick={() => publishPost('new')} auto>
+                        Publish
+                      </Button>
+                    )}
                   </div>
                 </div>
               ) : null}
             </Fieldset>
 
-            <Fieldset label='My Posts'>
+            <Fieldset label='My Posts' paddingBottom='1'>
               {userDecryptedPosts.length === 0 ? (
                 <>
                   <Note width='fit-content' label='Note '>
-                    You have not published any posts yet. To publish your first post, head over to <b>Write</b> section.
+                    You have not published any posts yet. To publish your first post, head over to <b>New</b> section.
                   </Note>
                 </>
-              ) : userDecryptedPosts.length > 0 ? (
-                'Decrypted posts.. '
-              ) : null}
-              {/* check if writer has previous posts - if no - then NOTE: no posts yet */}
-              {/* AND */}
-              {/* show all posts - cards (just post titles and a link to open in full page) - when opened in full page display the post itself and link to edit that  */}
+              ) : userDecryptedPosts.length > 0 && !editorIsOpen ? (
+                <div className='all-posts'>
+                  {userDecryptedPosts.map((post) => {
+                    return (
+                      <Card key={post.id} shadow width='95%'>
+                        <Card.Content>{convertCleanDataToHTML(post.data.blocks)}</Card.Content>
+                        <Card.Footer>
+                          <div className='card-footer'>
+                            <div className='footer-text'>
+                              <Text i>{convertToDate(post.data.time)}</Text>
+                            </div>
+                            <div className='footer-icons'>
+                              <Edit onClick={() => handleEdit(post)} />
+                              <Trash color='red' onClick={() => deletePost(post)} />
+                            </div>
+                          </div>
+                        </Card.Footer>
+                      </Card>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className='editor-open-section'>
+                  <div className='close-editor-btn'>
+                    <ChevronsDown />
+                    <Button type='secondary' ghost auto marginRight='2.8' onClick={() => closeEditor()}>
+                      Close Editor
+                    </Button>
+                  </div>
+                  <div id='editEditor'></div>
+                  <div className='delete-and-save-btns'>
+                    <Button type='warning' ghost onClick={() => resetEditor()} auto>
+                      Reset
+                    </Button>
+                    {publishBtnLoading ? (
+                      <Button type='secondary' shadow loading auto>
+                        Publish
+                      </Button>
+                    ) : (
+                      <Button type='secondary' shadow onClick={() => publishPost('edit')} auto>
+                        Publish
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
             </Fieldset>
           </Fieldset.Group>
         </>

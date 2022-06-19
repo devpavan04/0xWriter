@@ -179,7 +179,7 @@ export const Read = ({ wallet, ceramic, writer, user, users, handleMessage }) =>
                         </div>
                         <div className='view-profile'>
                           <Link href={'#'} icon onClick={() => openProfile(writer)}>
-                            View Profile
+                            Read
                           </Link>
                         </div>
                       </div>

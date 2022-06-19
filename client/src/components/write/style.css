@@ -5,17 +5,79 @@
   align-items: center;
 }
 
+#newEditor,
+#editEditor {
+  overflow-y: auto;
+  height: 540px;
+  width: 90%;
+}
+
+#newEditor::-webkit-scrollbar,
+#editEditor::-webkit-scrollbar {
+  -webkit-appearance: none;
+}
+
+#newEditor::-webkit-scrollbar:vertical,
+#editEditor::-webkit-scrollbar:vertical {
+  width: 10px;
+}
+
+#newEditor::-webkit-scrollbar:horizontal,
+#editEditor::-webkit-scrollbar:horizontal {
+  height: 10px;
+}
+
+#newEditor::-webkit-scrollbar-thumb,
+#editEditor::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  border: 2px solid white; /* should match background, can't be transparent */
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 .delete-and-save-btns {
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  gap: 1rem;
   margin-right: 2.8rem;
   margin-bottom: 1rem;
-  gap: 1rem;
 }
 
 .editor-open-section {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
+}
+
+.all-posts {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
+}
+
+.card-footer {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-icons {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.ce-delimiter {
+  line-height: 1.6em;
+  width: 100%;
+  text-align: center;
+}
+
+.ce-delimiter:before {
+  display: inline-block;
+  content: '***';
+  font-size: 30px;
+  line-height: 65px;
+  height: 30px;
+  letter-spacing: 0.2em;
 }
