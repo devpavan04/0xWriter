@@ -12,11 +12,13 @@ import {
 } from '../../lib/lit';
 import { convertCleanDataToHTML } from '../../utils/markup-parser';
 import './style.css';
-import { Button, Card, Note, Text, Fieldset, Divider, Badge, Dot, Spacer } from '@geist-ui/core';
+import { Button, Card, Note, Text, Fieldset,  useToasts } from '@geist-ui/core';
 import { ChevronsRight, ChevronsDown, Edit, Trash } from '@geist-ui/icons';
 
 export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
   const editorJS = useRef();
+
+  const { setToast } = useToasts({ placement: 'bottomRight', padding: '1rem' });
 
   const [userHasDeployed, setUserHasDeployed] = useState(false);
   const [userAccessControlConditions, setUserAccessControlConditions] = useState();
@@ -24,7 +26,7 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
   const [userEncryptedPosts, setUserEncryptedPosts] = useState();
   const [userDecryptedPosts, setUserDecryptedPosts] = useState([]);
   const [userHasSetAccessControlConditions, setUserHasSetAccessControlConditions] = useState(false);
-  const [editorIsOpen, setEditorIsOpen] = useState(true);
+  const [editorIsOpen, setEditorIsOpen] = useState(false);
   const [selectedPostToEditID, setSelectedPostToEditID] = useState();
   const [publishBtnLoading, setPublishBtnLoading] = useState(false);
 
@@ -33,13 +35,12 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
     const editor = new EditorJS({
       holder: editorType === 'new' ? 'newEditor' : editorType === 'edit' ? 'editEditor' : 'editorjs',
       logLevel: 'ERROR',
-      data: prevContent.data !== undefined ? prevContent.data : prevContent,
+      data: prevContent && prevContent.data !== undefined ? prevContent.data : prevContent,
       onReady: () => {
         editorJS.current = editor;
       },
       onChange: async () => {
         let content = await editor.saver.save();
-        console.log(content);
         if (editorType === 'new') {
           window.localStorage.setItem(`editorDraft-new-${wallet.address}`, JSON.stringify(content));
         } else if (editorType === 'edit') {
@@ -78,7 +79,6 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
       }
     } else if (editorType === 'edit') {
       let draft = window.localStorage.getItem(`editorDraft-${content.id}-${wallet.address}`);
-      console.log(draft);
       if (draft === null) {
         initializeEditor(editorType, content);
       } else {
@@ -109,7 +109,7 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
     }
   };
 
-  const publishPost = async (postType, postContent) => {
+  const publishPost = async (postType) => {
     try {
       let finalDraft;
 
@@ -242,6 +242,14 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
     }
   };
 
+  const deletePostHandler = (post) =>
+    setToast({
+      text: 'Are you sure you want to delete the post?',
+      type: 'error',
+      delay: '8000',
+      actions: [{ name: 'Delete', handler: () => deletePost(post) }],
+    });
+
   const resetEditor = () => {
     let draft = window.localStorage.getItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
 
@@ -264,7 +272,7 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
 
   const handleFieldChange = (value) => {
     if (value === 'New') {
-      openEditor('new');
+      // openEditor('new');
     } else {
       closeEditor();
     }
@@ -307,18 +315,24 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
               }
 
               if (writerData.accessControlConditions && writerData.encryptedSymmetricKey && writerData.encryptedPosts) {
-                const encryptedPostsBlob = encryptedPostsBase64ToBlob(writerData.encryptedPosts[0]);
-                const userDecryptedPosts = await decryptPostsWithLit(
-                  encryptedPostsBlob,
-                  writerData.encryptedSymmetricKey[0],
-                  writerData.accessControlConditions[0],
-                  authSig
-                );
-                setUserDecryptedPosts(JSON.parse(userDecryptedPosts.decryptedPosts));
+                if (
+                  writerData.encryptedPosts[0] &&
+                  writerData.encryptedSymmetricKey[0] &&
+                  writerData.accessControlConditions[0]
+                ) {
+                  const encryptedPostsBlob = encryptedPostsBase64ToBlob(writerData.encryptedPosts[0]);
+                  const userDecryptedPosts = await decryptPostsWithLit(
+                    encryptedPostsBlob,
+                    writerData.encryptedSymmetricKey[0],
+                    writerData.accessControlConditions[0],
+                    authSig
+                  );
+                  setUserDecryptedPosts(JSON.parse(userDecryptedPosts.decryptedPosts));
+                }
               }
             }
+            // openEditor('new');
           }
-          openEditor('new');
         }
       } catch (e) {
         console.log(e);
@@ -413,8 +427,8 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
                               <Text i>{convertToDate(post.data.time)}</Text>
                             </div>
                             <div className='footer-icons'>
-                              <Edit onClick={() => handleEdit(post)} />
-                              <Trash color='red' onClick={() => deletePost(post)} />
+                              <Edit className='edit-icon' onClick={() => handleEdit(post)} />
+                              <Trash className='delete-icon' color='red' onClick={() => deletePostHandler(post)} />
                             </div>
                           </div>
                         </Card.Footer>

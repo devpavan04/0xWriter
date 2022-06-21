@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import contractABI from '../../contracts/abi.json';
+import { getUsers, getUserByAddress, addSubscriber, removeSubscriber } from '../../lib/threadDB';
 import './style.css';
 import { Button, Spacer, Spinner, Note, Tag, Description, Input, Link } from '@geist-ui/core';
 
@@ -116,6 +117,8 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
     try {
       if (!newMint) {
         handleMessage('warning', 'Please enter no. of tokens.');
+      } else if (Number(newMint) <= 0) {
+        handleMessage('warning', 'No. of tokens should be atleast 1.');
       } else {
         setMintBtnLoading(true);
 
@@ -127,12 +130,28 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
         const receipt = await txn.wait();
 
         if (receipt.status === 1) {
-          setMintBtnLoading(false);
           handleMessage('success', 'Transaction successful!');
+          handleMessage('success', 'Updating user on threadDB...');
         } else {
           setMintBtnLoading(false);
           handleMessage('error', 'Transaction failed!');
         }
+
+        const loggedInUserBalanceOfWriterToken = await writerERC20.balanceOf(wallet.address);
+        const writerData = await ceramic.store.get('writerData', ceramic.did);
+        if (writerData !== undefined && writerData !== null) {
+          if (writerData.accessControlConditions[0] !== null) {
+            const writerRequiredNoOfTokensToAccess = writerData.accessControlConditions[0][0].returnValueTest.value;
+            if (Number(loggedInUserBalanceOfWriterToken) >= Number(writerRequiredNoOfTokensToAccess)) {
+              await addSubscriber(ceramic.did, ceramic.did);
+            } else {
+              await removeSubscriber(ceramic.did, ceramic.did);
+            }
+          }
+        }
+
+        handleMessage('success', 'User updated on threadDB!');
+        setMintBtnLoading(false);
 
         setNewMint('');
 
@@ -156,6 +175,8 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
         handleMessage('warning', 'Please enter valid address.');
       } else if (!transferAmount) {
         handleMessage('warning', 'Please enter no. of tokens');
+      } else if (Number(transferAmount) <= 0) {
+        handleMessage('warning', 'No. of tokens should be atleast 1.');
       } else {
         setTransferBtnLoading(true);
 
@@ -164,14 +185,39 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
         const receipt = await txn.wait();
 
         if (receipt.status === 1) {
-          setTransferBtnLoading(false);
           handleMessage('success', 'Transaction successful!');
+          handleMessage('success', 'Updating user on threadDB...');
         } else {
           setTransferBtnLoading(false);
           handleMessage('error', 'Transaction failed!');
         }
 
-        setNewMint('');
+        const loggedInUserBalanceOfWriterToken = await writerERC20.balanceOf(wallet.address);
+        const transferToUserBalanceOfWriterToken = await writerERC20.balanceOf(transferAddress);
+        const writerData = await ceramic.store.get('writerData', ceramic.did);
+        if (writerData !== undefined && writerData !== null) {
+          if (writerData.accessControlConditions[0] !== null) {
+            const writerRequiredNoOfTokensToAccess = writerData.accessControlConditions[0][0].returnValueTest.value;
+            if (Number(loggedInUserBalanceOfWriterToken) >= Number(writerRequiredNoOfTokensToAccess)) {
+              await addSubscriber(ceramic.did, ceramic.did);
+            } else {
+              await removeSubscriber(ceramic.did, ceramic.did);
+            }
+
+            const transferToUser = await getUserByAddress(transferAddress);
+            if (Number(transferToUserBalanceOfWriterToken) >= Number(writerRequiredNoOfTokensToAccess)) {
+              await addSubscriber(ceramic.did, transferToUser.did);
+            } else {
+              await removeSubscriber(ceramic.did, transferToUser.did);
+            }
+          }
+        }
+
+        handleMessage('success', 'User updated on threadDB!');
+        setTransferBtnLoading(false);
+
+        setTransferAddress('');
+        setTransferAmount('');
 
         setTimeout(() => {
           window.location.reload();
@@ -204,7 +250,7 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
           handleMessage('error', 'Transaction failed!');
         }
 
-        setNewMint('');
+        setNewTokenPrice('');
 
         setTimeout(() => {
           window.location.reload();

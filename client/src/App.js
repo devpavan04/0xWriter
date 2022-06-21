@@ -56,6 +56,8 @@ const App = () => {
       setWallet(wallet);
       setWalletConnected(true);
 
+      if (wallet.chainID !== 80001) return;
+
       const { ceramicClient, did, store, basicProfile } = await connectCeramic(provider, address);
       const ceramic = {
         client: ceramicClient,
@@ -115,6 +117,10 @@ const App = () => {
     }
   }, []);
 
+  const handleUsers = (users) => {
+    setUsers(users);
+  };
+
   return (
     <div className='wrapper'>
       <div className='header'>
@@ -158,6 +164,10 @@ const App = () => {
               <Text>Connect your wallet to get started!</Text>
             </Note>
           </>
+        ) : wallet.chainID !== 80001 ? (
+          <Note width='fit-content' margin='auto' marginTop='1rem' label='Note '>
+            Please connect to Mumbai Testnet.
+          </Note>
         ) : !ceramicConnected ? (
           <Loading type='secondary' spaceRatio={2.5} marginTop='1rem'>
             Connecting to ceramic
@@ -170,10 +180,6 @@ const App = () => {
           <Loading type='secondary' spaceRatio={2.5} marginTop='1rem'>
             Connecting to lit protocol
           </Loading>
-        ) : wallet.chainID !== 80001 ? (
-          <Note width='fit-content' margin='auto' marginTop='1rem' label='Note '>
-            Please connect to Mumbai Testnet.
-          </Note>
         ) : (
           <>
             <Tabs initialValue='1' hideDivider align='center'>
@@ -187,7 +193,13 @@ const App = () => {
               </Tabs.Item>
               <Tabs.Item label='Access Control' value='3'>
                 <Spacer h={2} />
-                <AccessControl wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
+                <AccessControl
+                  wallet={wallet}
+                  ceramic={ceramic}
+                  writer={writer}
+                  authSig={authSig}
+                  handleMessage={handleMessage}
+                />
               </Tabs.Item>
               <Tabs.Item label='Write' value='4'>
                 <Spacer h={1} />
@@ -207,6 +219,7 @@ const App = () => {
                   writer={writer}
                   user={user}
                   users={users}
+                  handleUsers={handleUsers}
                   handleMessage={handleMessage}
                 />
               </Tabs.Item>

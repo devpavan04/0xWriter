@@ -1,4 +1,10 @@
 .all-writers {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.all-writers-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
@@ -7,16 +13,22 @@
 .writer {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 1.4rem;
   font-size: 0.9rem !important;
 }
 
-.writer-details {
+.writer-details-all {
   display: flex;
   justify-content: space-between;
 }
 
-.back-btn-writer-card-top-right {
+.writer-details-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.breadcrumbs-writer-card-top-right {
   display: flex;
   justify-content: space-between;
 }
@@ -28,11 +40,11 @@
 }
 
 .writer-card-top-right {
-  padding-right: 0.8rem;
   display: flex;
   gap: 0.8rem;
   justify-content: flex-start;
   padding: 0.6rem 0 0;
+  align-items: baseline;
 }
 
 .writer-basic-profile {
@@ -65,4 +77,46 @@
   display: flex;
   justify-content: center;
   align-items: center !important;
+}
+
+.view-read-contract {
+  display: flex;
+  justify-content: space-between;
+}
+
+.subscribe-btn:hover {
+  cursor: pointer;
+}
+
+.contract-card-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.token-reads-and-writes {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1rem;
+  padding: 1rem 0 2rem;
+}
+
+.token-reads {
+  display: flex;
+  flex-direction: column;
+  gap: 2.8rem;
+}
+
+.token-writes {
+  display: flex;
+  flex-direction: column;
+  gap: 2.8rem;
+}
+
+.token-write {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  margin-left: 3rem;
 }

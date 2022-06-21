@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import contractABI from '../../contracts/abi.json';
+import {
+  encryptedPostsBlobToBase64,
+  encryptedPostsBase64ToBlob,
+  encryptPostsWithLit,
+  decryptPostsWithLit,
+} from '../../lib/lit';
 import './style.css';
-import { Button, Spinner, Note, Tag, Description, Input } from '@geist-ui/core';
+import { Button, Spinner, Note, Description, Input } from '@geist-ui/core';
 
-export const AccessControl = ({ wallet, ceramic, writer, handleMessage }) => {
+export const AccessControl = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
   const [userHasDeployed, setUserHasDeployed] = useState(false);
   const [userDeployedContractAddress, setUserDeployedContractAddress] = useState('');
   const [userTokenName, setUserTokenName] = useState('');
@@ -32,7 +38,7 @@ export const AccessControl = ({ wallet, ceramic, writer, handleMessage }) => {
           setUserTokenSymbol(userTokenSymbol);
 
           const writerData = await ceramic.store.get('writerData', ceramic.did);
-          
+
           if (writerData !== undefined && writerData !== null) {
             const accessControlConditions = writerData.accessControlConditions[0];
             const minTokenCount = accessControlConditions[0].returnValueTest.value;
@@ -51,7 +57,7 @@ export const AccessControl = ({ wallet, ceramic, writer, handleMessage }) => {
       if (!newMinTokenCount) {
         handleMessage('warning', 'Please enter min no. of tokens.');
       } else if (Number(newMinTokenCount) === 0) {
-        handleMessage('warning', 'Min no. of tokens required to access content should be atleast 1.');
+        handleMessage('warning', 'Min no. of tokens required should be atleast 1.');
       } else {
         setMinTokenCountBtnLoading(true);
 
@@ -68,6 +74,41 @@ export const AccessControl = ({ wallet, ceramic, writer, handleMessage }) => {
             },
           },
         ];
+
+        const writerData = await ceramic.store.get('writerData', ceramic.did);
+
+        if (writerData.accessControlConditions && writerData.encryptedSymmetricKey && writerData.encryptedPosts) {
+          if (
+            writerData.encryptedPosts[0] &&
+            writerData.encryptedSymmetricKey[0] &&
+            writerData.accessControlConditions[0]
+          ) {
+            const encryptedPostsBlob = encryptedPostsBase64ToBlob(writerData.encryptedPosts[0]);
+            const userDecryptedPosts = await decryptPostsWithLit(
+              encryptedPostsBlob,
+              writerData.encryptedSymmetricKey[0],
+              writerData.accessControlConditions[0],
+              authSig
+            );
+            const decryptedPosts = userDecryptedPosts.decryptedPosts;
+
+            const { encryptedPosts, encryptedSymmetricKey } = await encryptPostsWithLit(
+              decryptedPosts,
+              accessControlConditions, // encrypt the posts again with new access control conditions...
+              authSig
+            );
+
+            const encryptedPostsBase64 = await encryptedPostsBlobToBase64(encryptedPosts);
+
+            await ceramic.store.merge('writerData', {
+              encryptedPosts: [encryptedPostsBase64],
+            });
+
+            await ceramic.store.merge('writerData', {
+              encryptedSymmetricKey: [encryptedSymmetricKey],
+            });
+          }
+        }
 
         await ceramic.store.merge('writerData', { accessControlConditions: [accessControlConditions] });
 

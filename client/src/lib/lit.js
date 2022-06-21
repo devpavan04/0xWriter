@@ -54,9 +54,6 @@ export const decryptPostsWithLit = async (encryptedPosts, encryptedSymmetricKey,
       authSig,
     });
 
-    console.log(encryptedPosts);
-    console.log(symmetricKey);
-
     const decryptedPosts = await LitJsSdk.decryptString(encryptedPosts, symmetricKey);
 
     return { decryptedPosts };

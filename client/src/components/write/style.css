@@ -81,3 +81,8 @@
   height: 30px;
   letter-spacing: 0.2em;
 }
+
+.edit-icon:hover,
+.delete-icon:hover {
+  cursor: pointer;
+}

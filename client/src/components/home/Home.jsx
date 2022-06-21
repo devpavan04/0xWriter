@@ -20,7 +20,7 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
       }
     }
     init();
-  }, []);
+  }, [ceramic]);
 
   const updateBasicProfile = async () => {
     try {
