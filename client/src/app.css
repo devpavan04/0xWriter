@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Macondo&display=swap');
 
 .wrapper {
   width: 1000px;
@@ -18,7 +18,6 @@
 }
 
 .header-text {
-  font-family: 'Tenor Sans', sans-serif;
-  font-weight: bold;
+  font-family: 'Macondo', cursive;
   font-size: 3rem !important;
 }

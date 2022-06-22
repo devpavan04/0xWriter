@@ -4,7 +4,8 @@
   gap: 1rem;
 }
 
-.all-writers-cards {
+.all-writers-cards,
+.my-subscribers-cards {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
@@ -88,7 +89,8 @@
   cursor: pointer;
 }
 
-.contract-card-items {
+.contract-card-items,
+.read-card-items {
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -119,4 +121,8 @@
   justify-content: center;
   gap: 1rem;
   margin-left: 3rem;
+}
+
+.read-blog-posts {
+  padding: 0 0 1rem;
 }

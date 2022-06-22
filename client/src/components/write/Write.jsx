@@ -10,9 +10,9 @@ import {
   encryptPostsWithLit,
   decryptPostsWithLit,
 } from '../../lib/lit';
-import { convertCleanDataToHTML } from '../../utils/markup-parser';
+import { convertCleanDataToHTML, convertToDate } from '../../utils/markup-parser';
 import './style.css';
-import { Button, Card, Note, Text, Fieldset,  useToasts } from '@geist-ui/core';
+import { Button, Card, Note, Text, Fieldset, useToasts } from '@geist-ui/core';
 import { ChevronsRight, ChevronsDown, Edit, Trash } from '@geist-ui/icons';
 
 export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
@@ -31,7 +31,6 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
   const [publishBtnLoading, setPublishBtnLoading] = useState(false);
 
   const initializeEditor = (editorType, prevContent) => {
-    console.log(prevContent);
     const editor = new EditorJS({
       holder: editorType === 'new' ? 'newEditor' : editorType === 'edit' ? 'editEditor' : 'editorjs',
       logLevel: 'ERROR',
@@ -246,7 +245,6 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
     setToast({
       text: 'Are you sure you want to delete the post?',
       type: 'error',
-      delay: '8000',
       actions: [{ name: 'Delete', handler: () => deletePost(post) }],
     });
 
@@ -276,11 +274,6 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
     } else {
       closeEditor();
     }
-  };
-
-  const convertToDate = (epoch) => {
-    const date = new Date(epoch);
-    return date.toDateString();
   };
 
   useEffect(() => {
@@ -331,7 +324,6 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
                 }
               }
             }
-            // openEditor('new');
           }
         }
       } catch (e) {

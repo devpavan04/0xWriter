@@ -61,7 +61,7 @@ export const AccessControl = ({ wallet, ceramic, writer, authSig, handleMessage 
       } else {
         setMinTokenCountBtnLoading(true);
 
-        const accessControlConditions = [
+        var unifiedAccessControlConditions = [
           {
             contractAddress: userDeployedContractAddress,
             standardContractType: 'ERC20',
@@ -73,44 +73,75 @@ export const AccessControl = ({ wallet, ceramic, writer, authSig, handleMessage 
               value: newMinTokenCount,
             },
           },
+          { operator: 'or' },
+          {
+            contractAddress: '',
+            standardContractType: '',
+            chain: 'mumbai',
+            method: '',
+            parameters: [':userAddress'],
+            returnValueTest: {
+              comparator: '=',
+              value: wallet.address,
+            },
+          },
         ];
+
+        // const accessControlConditions = [
+        //   {
+        //     contractAddress: userDeployedContractAddress,
+        //     standardContractType: 'ERC20',
+        //     chain: 'mumbai',
+        //     method: 'balanceOf',
+        //     parameters: [':userAddress'],
+        //     returnValueTest: {
+        //       comparator: '>=',
+        //       value: newMinTokenCount,
+        //     },
+        //   },
+        // ];
 
         const writerData = await ceramic.store.get('writerData', ceramic.did);
 
-        if (writerData.accessControlConditions && writerData.encryptedSymmetricKey && writerData.encryptedPosts) {
-          if (
-            writerData.encryptedPosts[0] &&
-            writerData.encryptedSymmetricKey[0] &&
-            writerData.accessControlConditions[0]
-          ) {
-            const encryptedPostsBlob = encryptedPostsBase64ToBlob(writerData.encryptedPosts[0]);
-            const userDecryptedPosts = await decryptPostsWithLit(
-              encryptedPostsBlob,
-              writerData.encryptedSymmetricKey[0],
-              writerData.accessControlConditions[0],
-              authSig
-            );
-            const decryptedPosts = userDecryptedPosts.decryptedPosts;
+        if (writerData !== undefined && writerData !== null) {
+          if (writerData.accessControlConditions && writerData.encryptedSymmetricKey && writerData.encryptedPosts) {
+            if (
+              writerData.encryptedPosts !== null &&
+              writerData.encryptedPosts[0] &&
+              writerData.encryptedSymmetricKey !== null &&
+              writerData.encryptedSymmetricKey[0] &&
+              writerData.accessControlConditions !== null &&
+              writerData.accessControlConditions[0]
+            ) {
+              const encryptedPostsBlob = encryptedPostsBase64ToBlob(writerData.encryptedPosts[0]);
+              const userDecryptedPosts = await decryptPostsWithLit(
+                encryptedPostsBlob,
+                writerData.encryptedSymmetricKey[0],
+                writerData.accessControlConditions[0],
+                authSig
+              );
+              const decryptedPosts = userDecryptedPosts.decryptedPosts;
 
-            const { encryptedPosts, encryptedSymmetricKey } = await encryptPostsWithLit(
-              decryptedPosts,
-              accessControlConditions, // encrypt the posts again with new access control conditions...
-              authSig
-            );
+              const { encryptedPosts, encryptedSymmetricKey } = await encryptPostsWithLit(
+                decryptedPosts,
+                unifiedAccessControlConditions, // encrypt the posts again with new access control conditions...
+                authSig
+              );
 
-            const encryptedPostsBase64 = await encryptedPostsBlobToBase64(encryptedPosts);
+              const encryptedPostsBase64 = await encryptedPostsBlobToBase64(encryptedPosts);
 
-            await ceramic.store.merge('writerData', {
-              encryptedPosts: [encryptedPostsBase64],
-            });
+              await ceramic.store.merge('writerData', {
+                encryptedPosts: [encryptedPostsBase64],
+              });
 
-            await ceramic.store.merge('writerData', {
-              encryptedSymmetricKey: [encryptedSymmetricKey],
-            });
+              await ceramic.store.merge('writerData', {
+                encryptedSymmetricKey: [encryptedSymmetricKey],
+              });
+            }
           }
         }
 
-        await ceramic.store.merge('writerData', { accessControlConditions: [accessControlConditions] });
+        await ceramic.store.merge('writerData', { accessControlConditions: [unifiedAccessControlConditions] });
 
         setMinTokenCountBtnLoading(false);
         handleMessage('success', 'New min no. of tokens required successfully updated.');

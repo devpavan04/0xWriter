@@ -98,3 +98,8 @@ export const convertCleanDataToHTML = (blocks) => {
   });
   return convertedHtml;
 };
+
+export const convertToDate = (epoch) => {
+  const date = new Date(epoch);
+  return date.toDateString();
+};

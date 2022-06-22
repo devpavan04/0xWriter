@@ -15,7 +15,6 @@ export const encryptedPostsBlobToBase64 = async (encryptedPostsBlob) => {
 };
 
 export const encryptedPostsBase64ToBlob = (encryptedPostsBase64String) => {
-  console.log(encryptedPostsBase64String);
   const encryptedPostsUint8Array = (0, base64StringToUint8Array)(encryptedPostsBase64String);
 
   const encryptedPostsBlob = new Blob([encryptedPostsUint8Array], { type: 'application/octet-stream' });

@@ -126,7 +126,7 @@ const App = () => {
       <div className='header'>
         <div className='heading'>
           <Text p margin={0} className='header-text'>
-            0xW
+            0xWriter
           </Text>
         </div>
         <div className='connect-buttons'>
@@ -217,6 +217,7 @@ const App = () => {
                   wallet={wallet}
                   ceramic={ceramic}
                   writer={writer}
+                  authSig={authSig}
                   user={user}
                   users={users}
                   handleUsers={handleUsers}
