@@ -3,7 +3,7 @@ import Identicon from 'react-identicons';
 import './style.css';
 import { Button, Text, Card, Note, Tag, Description, Modal, useModal, Input, Snippet } from '@geist-ui/core';
 
-export const Home = ({ wallet, ceramic, handleMessage }) => {
+export const Home = ({ wallet, ceramic, handleRerender, handleMessage }) => {
   const { setVisible, bindings } = useModal();
 
   const [name, setName] = useState();
@@ -20,7 +20,7 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
       }
     }
     init();
-  }, [ceramic]);
+  }, []);
 
   const updateBasicProfile = async () => {
     try {
@@ -48,9 +48,7 @@ export const Home = ({ wallet, ceramic, handleMessage }) => {
 
         setVisible(false);
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true);
       }
     } catch (e) {
       console.log(e);

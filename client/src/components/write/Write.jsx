@@ -15,7 +15,7 @@ import './style.css';
 import { Button, Card, Note, Text, Fieldset, useToasts } from '@geist-ui/core';
 import { ChevronsRight, ChevronsDown, Edit, Trash } from '@geist-ui/icons';
 
-export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
+export const Write = ({ wallet, ceramic, writer, authSig, handleRerender, handleMessage }) => {
   const editorJS = useRef();
 
   const { setToast } = useToasts({ placement: 'bottomRight', padding: '1rem' });
@@ -182,9 +182,7 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
 
         setSelectedPostToEditID(0);
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true);
       }
     } catch (e) {
       console.log(e);
@@ -231,9 +229,7 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
 
       setSelectedPostToEditID(0);
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      handleRerender(true);
     } catch (e) {
       console.log(e);
 
@@ -340,7 +336,7 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
         editorJS.current = null;
       }
     };
-  }, [writer]);
+  }, []);
 
   return (
     <div className='writer-content'>

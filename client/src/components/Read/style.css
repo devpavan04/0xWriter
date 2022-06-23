@@ -32,6 +32,7 @@
 .breadcrumbs-writer-card-top-right {
   display: flex;
   justify-content: space-between;
+  margin-top: 0.6rem;
 }
 
 .writer-identicon-profile {
@@ -42,10 +43,9 @@
 
 .writer-card-top-right {
   display: flex;
-  gap: 0.8rem;
-  justify-content: flex-start;
-  padding: 0.6rem 0 0;
-  align-items: baseline;
+  gap: 1rem;
+  justify-content: center !important;
+  align-items: center !important;
 }
 
 .writer-basic-profile {

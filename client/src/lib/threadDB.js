@@ -136,19 +136,21 @@ export const addSubscriber = async (did, subscriberDID) => {
     if (credentials) {
       const { threadDBClient, threadID } = credentials;
 
-      const query = new Where('did').eq(did);
+      const writerQuery = new Where('did').eq(did);
+      const writer = await threadDBClient.find(threadID, 'Users', writerQuery);
+      if (writer.length < 1) return;
+      let writerData = writer[0];
+      if (writerData.subscribedBy.includes(subscriberDID) === true) return;
+      writerData.subscribedBy.push(subscriberDID);
+      await threadDBClient.save(threadID, 'Users', [writerData]);
 
-      const user = await threadDBClient.find(threadID, 'Users', query);
-
-      if (user.length < 1) return;
-
-      let userData = user[0];
-
-      if (userData.subscribedBy.includes(subscriberDID) === true) return;
-
-      userData.subscribedBy.push(subscriberDID);
-
-      return await threadDBClient.save(threadID, 'Users', [userData]);
+      const subscriberQuery = new Where('did').eq(subscriberDID);
+      const subscriber = await threadDBClient.find(threadID, 'Users', subscriberQuery);
+      if (subscriber.length < 1) return;
+      let subscriberData = subscriber[0];
+      if (subscriberData.subscribedTo.includes(did) === true) return;
+      subscriberData.subscribedTo.push(did);
+      return await threadDBClient.save(threadID, 'Users', [subscriberData]);
     } else {
       throw new Error('ThreadDB credentials not found! Reconnect your wallet.');
     }
@@ -166,19 +168,21 @@ export const removeSubscriber = async (did, subscriberDID) => {
     if (credentials) {
       const { threadDBClient, threadID } = credentials;
 
-      const query = new Where('did').eq(did);
+      const writerQuery = new Where('did').eq(did);
+      const writer = await threadDBClient.find(threadID, 'Users', writerQuery);
+      if (writer.length < 1) return;
+      let writerData = writer[0];
+      if (writerData.subscribedBy.includes(subscriberDID) === false) return;
+      writerData.subscribedBy = writerData.subscribedBy.filter((did) => did !== subscriberDID);
+      await threadDBClient.save(threadID, 'Users', [writerData]);
 
-      const user = await threadDBClient.find(threadID, 'Users', query);
-
-      if (user.length < 1) return;
-
-      let userData = user[0];
-
-      if (userData.subscribedBy.includes(subscriberDID) === false) return;
-
-      userData.subscribedBy = userData.subscribedBy.filter((did) => did !== subscriberDID);
-
-      return await threadDBClient.save(threadID, 'Users', [userData]);
+      const subscriberQuery = new Where('did').eq(subscriberDID);
+      const subscriber = await threadDBClient.find(threadID, 'Users', subscriberQuery);
+      if (subscriber.length < 1) return;
+      let subscriberData = subscriber[0];
+      if (subscriberData.subscribedTo.includes(did) === false) return;
+      subscriberData.subscribedTo = subscriberData.subscribedTo.filter((did) => did !== did);
+      return await threadDBClient.save(threadID, 'Users', [subscriberData]);
     } else {
       throw new Error('ThreadDB credentials not found! Reconnect your wallet.');
     }

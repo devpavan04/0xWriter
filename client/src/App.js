@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { web3Modal, connectWallet, disconectWallet } from './utils/wallet';
+import Logo from './assets/logo/logo.png';
 import LitJsSdk from 'lit-js-sdk';
 import { connectCeramic } from './utils/ceramic';
 import { connectThreadDB } from './utils/threadDB';
@@ -8,7 +9,7 @@ import { registerUser, getUserByDID, setUserDeployedContractAddress, getUsers } 
 import contractABI from './contracts/abi.json';
 import contractAddress from './contracts/address.json';
 import './app.css';
-import { Button, Text, Note, useToasts, Tabs, Loading, Spacer } from '@geist-ui/core';
+import { Button, Text, Note, useToasts, Tabs, Loading, Spacer, Page } from '@geist-ui/core';
 import { Home } from './components/Home';
 import { Write } from './components/Write';
 import { MyContract } from './components/MyContract';
@@ -33,6 +34,8 @@ const App = () => {
   const [authSig, setAuthSig] = useState();
   const [litConnected, setLitConnected] = useState(false);
 
+  const [rerender, setRerender] = useState(false);
+
   useEffect(() => {
     function init() {
       if (web3Modal.cachedProvider) {
@@ -40,7 +43,11 @@ const App = () => {
       }
     }
     init();
-  }, []);
+  }, [rerender]);
+
+  const handleRerender = (value) => {
+    setRerender(value);
+  };
 
   const connect = useCallback(async () => {
     try {
@@ -92,7 +99,7 @@ const App = () => {
       setUsers(users);
 
       // Lit Protocol connection
-      const client = new LitJsSdk.LitNodeClient();
+      const client = new LitJsSdk.LitNodeClient({ alertWhenUnauthorized: false });
       await client.connect();
       window.litNodeClient = client;
 
@@ -117,17 +124,11 @@ const App = () => {
     }
   }, []);
 
-  const handleUsers = (users) => {
-    setUsers(users);
-  };
-
   return (
     <div className='wrapper'>
       <div className='header'>
         <div className='heading'>
-          <Text p margin={0} className='header-text'>
-            0xWriter
-          </Text>
+          <img src={Logo} width='150px' alt='Logo' />
         </div>
         <div className='connect-buttons'>
           {!walletConnected ? (
@@ -185,11 +186,17 @@ const App = () => {
             <Tabs initialValue='1' hideDivider align='center'>
               <Tabs.Item label='Home' value='1'>
                 <Spacer h={2} />
-                <Home wallet={wallet} ceramic={ceramic} handleMessage={handleMessage} />
+                <Home wallet={wallet} ceramic={ceramic} handleRerender={handleRerender} handleMessage={handleMessage} />
               </Tabs.Item>
               <Tabs.Item label='My Contract' value='2'>
                 <Spacer h={2} />
-                <MyContract wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
+                <MyContract
+                  wallet={wallet}
+                  ceramic={ceramic}
+                  writer={writer}
+                  handleRerender={handleRerender}
+                  handleMessage={handleMessage}
+                />
               </Tabs.Item>
               <Tabs.Item label='Access Control' value='3'>
                 <Spacer h={2} />
@@ -198,6 +205,7 @@ const App = () => {
                   ceramic={ceramic}
                   writer={writer}
                   authSig={authSig}
+                  handleRerender={handleRerender}
                   handleMessage={handleMessage}
                 />
               </Tabs.Item>
@@ -208,6 +216,7 @@ const App = () => {
                   ceramic={ceramic}
                   writer={writer}
                   authSig={authSig}
+                  handleRerender={handleRerender}
                   handleMessage={handleMessage}
                 />
               </Tabs.Item>
@@ -220,13 +229,19 @@ const App = () => {
                   authSig={authSig}
                   user={user}
                   users={users}
-                  handleUsers={handleUsers}
+                  handleRerender={handleRerender}
                   handleMessage={handleMessage}
                 />
               </Tabs.Item>
               <Tabs.Item label='0xWriter Contract' value='6'>
                 <Spacer h={2} />
-                <WriterContract wallet={wallet} ceramic={ceramic} writer={writer} handleMessage={handleMessage} />
+                <WriterContract
+                  wallet={wallet}
+                  ceramic={ceramic}
+                  writer={writer}
+                  handleRerender={handleRerender}
+                  handleMessage={handleMessage}
+                />
               </Tabs.Item>
             </Tabs>
           </>

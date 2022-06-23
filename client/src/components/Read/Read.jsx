@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Identicon from 'react-identicons';
 import contractABI from '../../contracts/abi.json';
-import { getUsers, getUserByDID, getUserByAddress, addSubscriber, removeSubscriber } from '../../lib/threadDB';
+import { getUserByDID, getUserByAddress, addSubscriber, removeSubscriber } from '../../lib/threadDB';
 import { encryptedPostsBase64ToBlob, decryptPostsWithLit } from '../../lib/lit';
 import { convertCleanDataToHTML, convertToDate } from '../../utils/markup-parser';
 import './style.css';
@@ -19,10 +19,11 @@ import {
   Card,
   Tag,
   Note,
+  Modal,
   Breadcrumbs,
 } from '@geist-ui/core';
 
-export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUsers, handleMessage }) => {
+export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, handleMessage }) => {
   const [allWriters, setAllWriters] = useState([]);
   const [subscribedToWriters, setSubscribedToWriters] = useState([]);
   const [myWriting, setMyWriting] = useState([]);
@@ -45,6 +46,9 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
   const [transferBtnLoading, setTransferBtnLoading] = useState(false);
 
   const [loggedInUserIsAWriter, setLoggedInUserIsAWriter] = useState(false);
+
+  const [showModal, setShowModal] = useState(false);
+  const [showInfo, setShowInfo] = useState(true);
 
   const handleShowWritersPage = () => {
     setCurrentProfile({});
@@ -72,6 +76,11 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
     setShowContractPage(true);
   };
 
+  const onModalClose = () => {
+    handleShowProfilePage(currentProfile);
+    setShowInfo(true);
+  };
+
   const readBlog = async (writer) => {
     try {
       setCurrentProfileDecryptedPosts([]);
@@ -95,8 +104,10 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
     } catch (e) {
       console.log(e);
 
-      console.log(e.message);
-      handleMessage('error', e.message);
+      if (e.message === 'not_authorized') {
+        setShowInfo(false);
+        setShowModal(true);
+      }
     }
   };
 
@@ -159,9 +170,8 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
 
         setNewMint('');
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true);
+        handleShowWritersPage();
       }
     } catch (e) {
       console.log(e);
@@ -218,9 +228,8 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
         setTransferAddress('');
         setTransferAmount('');
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true);
+        handleShowWritersPage();
       }
     } catch (e) {
       console.log(e);
@@ -312,15 +321,12 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
 
         setAllWriters(allWriters);
 
-        const updatedUsers = await getUsers();
-        if (users !== updatedUsers) {
-          handleUsers(updatedUsers);
-        }
-
-        const subscribedToWriters = allWriters.filter((writer) => writer.subscribedBy.includes(ceramic.did));
+        const subscribedToWriters = allWriters.filter((writer) =>
+          writer !== undefined ? writer.subscribedBy.includes(ceramic.did) : null
+        );
         setSubscribedToWriters(subscribedToWriters);
 
-        const myWriting = allWriters.filter((writer) => writer.did === ceramic.did);
+        const myWriting = allWriters.filter((writer) => (writer !== undefined ? writer.did === ceramic.did : null));
         setMyWriting(myWriting);
 
         if (myWriting[0]) {
@@ -348,7 +354,7 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
       }
     }
     init();
-  }, [writer, user, users, currentProfile]);
+  }, [writer, users, currentProfile]);
 
   const renderWriters = (writersArray) => {
     return (
@@ -466,17 +472,16 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
                         </Tag>
                       </Badge.Anchor>
                     ) : currentProfile.loggedInUserIsSubscribed === 'no' ? (
-                      <Badge.Anchor>
-                        <Tag
-                          type='dark'
-                          className='subscribe-btn'
-                          onClick={() => handleShowContractPage()}
-                          invert
-                          scale={0.9}
-                        >
-                          Subscribe
-                        </Tag>
-                      </Badge.Anchor>
+                      <Button
+                        type='secondary'
+                        shadow
+                        auto
+                        className='btn'
+                        onClick={() => handleShowContractPage()}
+                        scale={0.8}
+                      >
+                        Subscribe
+                      </Button>
                     ) : null}
                   </div>
                 </div>
@@ -693,14 +698,28 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
                   {currentProfileDecryptedPosts.length <= 0 ? (
                     currentProfile.address === wallet.address ? (
                       <Note width='fit-content' label='Note '>
-                        You have not published any posts yet. To publish your first post, head over to <b>Write</b>{' '}
+                        You have not published any posts yet! To publish your first post, head over to <b>Write</b>{' '}
                         section.
                       </Note>
                     ) : (
-                      <Note width='fit-content' label='Info '>
-                        Either you are not subscribed (If so, you will see an alert message on the top) or there is no
-                        content to view.
-                      </Note>
+                      <>
+                        {showInfo ? (
+                          <Note width='fit-content' label='Info '>
+                            Looks like the writer has not published anything yet! Come back again later.
+                          </Note>
+                        ) : null}
+                        <Modal
+                          visible={showModal}
+                          width='fit-content'
+                          style={{ display: 'none !important' }}
+                          onClose={onModalClose}
+                        >
+                          <Modal.Title>Not Authorized :/</Modal.Title>
+                          <Modal.Content>
+                            <Text>You need to subscribe to the writer to view the content.</Text>
+                          </Modal.Content>
+                        </Modal>
+                      </>
                     )
                   ) : (
                     currentProfileDecryptedPosts.map((post) => {
@@ -730,7 +749,13 @@ export const Read = ({ wallet, ceramic, writer, authSig, user, users, handleUser
           {renderWriters(allWriters)}
         </Fieldset>
         <Fieldset label='My Subscriptions' paddingRight='2.6'>
-          {renderWriters(subscribedToWriters)}
+          {subscribedToWriters.length < 1 ? (
+            <Note width='fit-content' label='Info '>
+              You are not subscribed to any writers yet.
+            </Note>
+          ) : (
+            renderWriters(subscribedToWriters)
+          )}
         </Fieldset>
         {loggedInUserIsAWriter ? (
           <Fieldset label='My Subscribers' paddingRight='2.6'>

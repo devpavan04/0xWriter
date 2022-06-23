@@ -10,7 +10,7 @@ import {
 import './style.css';
 import { Button, Spinner, Note, Description, Input } from '@geist-ui/core';
 
-export const AccessControl = ({ wallet, ceramic, writer, authSig, handleMessage }) => {
+export const AccessControl = ({ wallet, ceramic, writer, authSig, handleRerender, handleMessage }) => {
   const [userHasDeployed, setUserHasDeployed] = useState(false);
   const [userDeployedContractAddress, setUserDeployedContractAddress] = useState('');
   const [userTokenName, setUserTokenName] = useState('');
@@ -61,7 +61,7 @@ export const AccessControl = ({ wallet, ceramic, writer, authSig, handleMessage 
       } else {
         setMinTokenCountBtnLoading(true);
 
-        var unifiedAccessControlConditions = [
+        const unifiedAccessControlConditions = [
           {
             contractAddress: userDeployedContractAddress,
             standardContractType: 'ERC20',
@@ -148,9 +148,7 @@ export const AccessControl = ({ wallet, ceramic, writer, authSig, handleMessage 
 
         setNewMinTokenCount('');
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true)
       }
     } catch (e) {
       console.log(e);

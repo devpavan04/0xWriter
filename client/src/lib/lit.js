@@ -59,6 +59,6 @@ export const decryptPostsWithLit = async (encryptedPosts, encryptedSymmetricKey,
   } catch (e) {
     console.log(e);
 
-    throw new Error(e.message);
+    throw new Error(e.errorCode);
   }
 };

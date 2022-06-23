@@ -5,7 +5,7 @@ import { getUsers, getUserByAddress, addSubscriber, removeSubscriber } from '../
 import './style.css';
 import { Button, Spacer, Spinner, Note, Tag, Description, Input, Link } from '@geist-ui/core';
 
-export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
+export const MyContract = ({ wallet, ceramic, writer, handleRerender, handleMessage }) => {
   const [tokenName, setTokenName] = useState('');
   const [tokenSymbol, setTokenSymbol] = useState('');
   const [tokenPrice, setTokenPrice] = useState('');
@@ -62,7 +62,7 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
       }
     }
     init();
-  }, [writer]);
+  }, []);
 
   const deployWriterERC20Contract = async () => {
     try {
@@ -155,9 +155,7 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
 
         setNewMint('');
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true);
       }
     } catch (e) {
       console.log(e);
@@ -219,9 +217,7 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
         setTransferAddress('');
         setTransferAmount('');
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true);
       }
     } catch (e) {
       console.log(e);
@@ -252,9 +248,7 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
 
         setNewTokenPrice('');
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true);
       }
     } catch (e) {
       console.log(e);
@@ -280,9 +274,7 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
         handleMessage('error', 'Transaction failed!');
       }
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      handleRerender(true);
     } catch (e) {
       console.log(e);
 
@@ -317,7 +309,10 @@ export const MyContract = ({ wallet, ceramic, writer, handleMessage }) => {
             <Description title='Token Symbol' content={!userTokenSymbol ? <Spinner /> : userTokenSymbol} />
             <Description title='Token Price' content={!userTokenPrice ? <Spinner /> : userTokenPrice} />
             <Description title='Total Minted' content={!userTokenTotalMinted ? <Spinner /> : userTokenTotalMinted} />
-            <Description title='Your Token Balance' content={!userTokenBalance ? <Spinner /> : userTokenBalance} />
+            <Description
+              title='Your Token Balance'
+              content={!userTokenBalance && userTokenBalance !== 0 ? <Spinner /> : userTokenBalance}
+            />
             <Description
               title='Contract Balance'
               content={!userTokenContractBalance ? <Spinner /> : userTokenContractBalance}

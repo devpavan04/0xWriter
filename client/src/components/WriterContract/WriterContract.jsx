@@ -5,7 +5,7 @@ import { getUserByAddress } from '../../lib/threadDB';
 import './style.css';
 import { Button, Spinner, Card, Text, Description, Input, Snippet, Link } from '@geist-ui/core';
 
-export const WriterContract = ({ wallet, ceramic, writer, handleMessage }) => {
+export const WriterContract = ({ wallet, ceramic, writer, handleRerender, handleMessage }) => {
   const [writerContractAddress, setWriterContractAddress] = useState('');
   const [ownerAddress, setOwnerAddress] = useState('');
   const [ownerDID, setOwnerDID] = useState('');
@@ -62,9 +62,7 @@ export const WriterContract = ({ wallet, ceramic, writer, handleMessage }) => {
         handleMessage('error', 'Transaction failed!');
       }
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      handleRerender(true);
     } catch (e) {
       console.log(e);
 
@@ -125,9 +123,7 @@ export const WriterContract = ({ wallet, ceramic, writer, handleMessage }) => {
 
         setNewDeploymentFee('');
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true);
       }
     } catch (e) {
       console.log(e);
