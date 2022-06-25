@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { web3Modal, connectWallet, disconectWallet } from './utils/wallet';
-import Logo from './assets/logo/logo.png';
 import LitJsSdk from 'lit-js-sdk';
 import { connectCeramic } from './utils/ceramic';
 import { connectThreadDB } from './utils/threadDB';
 import { registerUser, getUserByDID, setUserDeployedContractAddress, getUsers } from './lib/threadDB';
 import contractABI from './contracts/abi.json';
 import contractAddress from './contracts/address.json';
+import logo from './assets/logo/Group 19@3x.png';
 import './app.css';
 import { Button, Text, Note, useToasts, Tabs, Loading, Spacer, Page } from '@geist-ui/core';
+import { Feather } from '@geist-ui/icons';
 import { Home } from './components/Home';
 import { Write } from './components/Write';
 import { MyContract } from './components/MyContract';
@@ -128,7 +129,7 @@ const App = () => {
     <div className='wrapper'>
       <div className='header'>
         <div className='heading'>
-          <img src={Logo} width='150px' alt='Logo' />
+          <img className='logo' src={logo} width='130' alt='0xWriter logo' />
         </div>
         <div className='connect-buttons'>
           {!walletConnected ? (
@@ -205,6 +206,7 @@ const App = () => {
                   ceramic={ceramic}
                   writer={writer}
                   authSig={authSig}
+                  user={user}
                   handleRerender={handleRerender}
                   handleMessage={handleMessage}
                 />
@@ -227,7 +229,6 @@ const App = () => {
                   ceramic={ceramic}
                   writer={writer}
                   authSig={authSig}
-                  user={user}
                   users={users}
                   handleRerender={handleRerender}
                   handleMessage={handleMessage}

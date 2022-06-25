@@ -43,7 +43,7 @@
 
 .writer-card-top-right {
   display: flex;
-  gap: 1rem;
+  gap: 1.1rem;
   justify-content: center !important;
   align-items: center !important;
 }
@@ -125,4 +125,7 @@
 
 .read-blog-posts {
   padding: 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }

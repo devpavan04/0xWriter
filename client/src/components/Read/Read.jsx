@@ -45,10 +45,12 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
   const [transferAmount, setTransferAmount] = useState();
   const [transferBtnLoading, setTransferBtnLoading] = useState(false);
 
+  const [currentField, setCurrentField] = useState('All Writers');
+
   const [loggedInUserIsAWriter, setLoggedInUserIsAWriter] = useState(false);
 
-  const [showModal, setShowModal] = useState(false);
-  const [showInfo, setShowInfo] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
+  const [postsLoading, setPostsLoading] = useState(false);
 
   const handleShowWritersPage = () => {
     setCurrentProfile({});
@@ -76,14 +78,21 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
     setShowContractPage(true);
   };
 
-  const onModalClose = () => {
-    handleShowProfilePage(currentProfile);
-    setShowInfo(true);
+  const handleShowReadPage = async (writer) => {
+    setShowWritersPage(false);
+    setShowProfilePage(false);
+    setShowContractPage(false);
+
+    setShowReadPage(true);
+
+    await readBlog(writer);
   };
 
   const readBlog = async (writer) => {
     try {
       setCurrentProfileDecryptedPosts([]);
+      setShowInfo(false);
+      setPostsLoading(true);
 
       if (writer.accessControlConditions && writer.encryptedSymmetricKey && writer.encryptedPosts) {
         if (
@@ -99,29 +108,26 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
             authSig
           );
           setCurrentProfileDecryptedPosts(JSON.parse(writerDecryptedPosts.decryptedPosts));
+          setShowInfo(true);
+          setPostsLoading(false);
         }
       }
     } catch (e) {
       console.log(e);
 
       if (e.message === 'not_authorized') {
-        setShowInfo(false);
-        setShowModal(true);
+        setPostsLoading(false);
+        const res = alert('You need to subscribe to the writer to view the content.');
+        if (res === undefined) {
+          handleShowProfilePage(currentProfile);
+        }
       }
     }
   };
 
-  const handleShowReadPage = async (writer) => {
-    setShowWritersPage(false);
-    setShowProfilePage(false);
-    setShowContractPage(false);
-
-    setShowReadPage(true);
-
-    await readBlog(writer);
-  };
-
   const handleFieldChange = (value) => {
+    setCurrentField(value);
+
     if (value === 'My Subscribers') {
       setCurrentProfile({});
       setShowWritersPage(false);
@@ -214,14 +220,6 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
           await removeSubscriber(writer.did, ceramic.did);
         }
 
-        const transferToUserBalanceOfWriterToken = await writer.writerERC20.balanceOf(transferAddress);
-        const transferToUser = await getUserByAddress(transferAddress);
-        if (Number(transferToUserBalanceOfWriterToken) >= Number(writerRequiredNoOfTokensToAccess)) {
-          await addSubscriber(writer.did, transferToUser.did);
-        } else {
-          await removeSubscriber(writer.did, transferToUser.did);
-        }
-
         handleMessage('success', 'User updated on threadDB!');
         setTransferBtnLoading(false);
 
@@ -256,8 +254,6 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
                   address: writerUser.address,
                   did: writerUser.did,
                   contractAddress: writerUser.deployedContractAddress,
-                  subscribedBy: writerUser.subscribedBy,
-                  subscribedTo: writerUser.subscribedTo,
                 };
 
                 if (writerUser.address === wallet.address) {
@@ -273,9 +269,6 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
                 }
 
                 userData.accessControlConditions = writerData.accessControlConditions[0];
-
-                userData.totalSubscribedBy = writerUser.subscribedBy.length;
-                userData.totalSubscribedTo = writerUser.subscribedTo.length;
 
                 const basicProfile = await ceramic.store.get('basicProfile', writerUser.did);
                 if (basicProfile !== undefined && basicProfile !== null) {
@@ -312,6 +305,13 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
                   await removeSubscriber(writerUser.did, ceramic.did);
                   userData.loggedInUserIsSubscribed = 'no';
                 }
+
+                const updatedWriterUser = await getUserByDID(writerUser.did);
+
+                userData.totalSubscribedBy = updatedWriterUser.subscribedBy.length;
+                userData.totalSubscribedTo = updatedWriterUser.subscribedTo.length;
+                userData.subscribedBy = updatedWriterUser.subscribedBy;
+                userData.subscribedTo = updatedWriterUser.subscribedTo;
 
                 return userData;
               }
@@ -450,17 +450,17 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
                   <div className='breadcrumbs'>
                     <Breadcrumbs>
                       <Breadcrumbs.Item href='#' onClick={handleShowWritersPage}>
-                        All Writers
+                        {currentField}
                       </Breadcrumbs.Item>
                       <Breadcrumbs.Item>Writer</Breadcrumbs.Item>
                     </Breadcrumbs>
                   </div>
                   <div className='writer-card-top-right'>
                     <Badge.Anchor>
-                      <Badge scale={0.8} marginBottom='0.7' style={{ backgroundColor: 'darkgreen' }}>
+                      <Badge scale={0.8} marginBottom='0' style={{ backgroundColor: 'darkgreen' }}>
                         {currentProfile.totalSubscribedBy > 1000 ? '1k+' : currentProfile.totalSubscribedBy}
                       </Badge>
-                      <Tag type='dark' scale={0.9}>
+                      <Tag type='dark' scale={0.9} marginTop='0.3'>
                         Subscribers
                       </Tag>
                     </Badge.Anchor>
@@ -541,7 +541,7 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
                 <div className='breadcrumbs'>
                   <Breadcrumbs>
                     <Breadcrumbs.Item href='#' onClick={handleShowWritersPage}>
-                      All Writers
+                      {currentField}
                     </Breadcrumbs.Item>
                     <Breadcrumbs.Item href='#' onClick={() => handleShowProfilePage(currentProfile)}>
                       Writer
@@ -686,7 +686,7 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
                 <div className='breadcrumbs'>
                   <Breadcrumbs>
                     <Breadcrumbs.Item href='#' onClick={handleShowWritersPage}>
-                      All Writers
+                      {currentField}
                     </Breadcrumbs.Item>
                     <Breadcrumbs.Item href='#' onClick={() => handleShowProfilePage(currentProfile)}>
                       Writer
@@ -696,31 +696,20 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
                 </div>
                 <div className='read-blog-posts'>
                   {currentProfileDecryptedPosts.length <= 0 ? (
-                    currentProfile.address === wallet.address ? (
-                      <Note width='fit-content' label='Note '>
-                        You have not published any posts yet! To publish your first post, head over to <b>Write</b>{' '}
-                        section.
-                      </Note>
-                    ) : (
-                      <>
-                        {showInfo ? (
-                          <Note width='fit-content' label='Info '>
-                            Looks like the writer has not published anything yet! Come back again later.
-                          </Note>
-                        ) : null}
-                        <Modal
-                          visible={showModal}
-                          width='fit-content'
-                          style={{ display: 'none !important' }}
-                          onClose={onModalClose}
-                        >
-                          <Modal.Title>Not Authorized :/</Modal.Title>
-                          <Modal.Content>
-                            <Text>You need to subscribe to the writer to view the content.</Text>
-                          </Modal.Content>
-                        </Modal>
-                      </>
-                    )
+                    postsLoading ? (
+                      <Spinner />
+                    ) : showInfo ? (
+                      currentProfile.address === wallet.address ? (
+                        <Note width='fit-content' label='Note '>
+                          You have not published any posts yet! To publish your first post, head over to <b>Write</b>{' '}
+                          section.
+                        </Note>
+                      ) : (
+                        <Note width='fit-content' label='Info '>
+                          Looks like the writer has not published anything yet! Come back again later.
+                        </Note>
+                      )
+                    ) : null
                   ) : (
                     currentProfileDecryptedPosts.map((post) => {
                       return (

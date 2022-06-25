@@ -7,12 +7,14 @@ import {
   encryptPostsWithLit,
   decryptPostsWithLit,
 } from '../../lib/lit';
+import { getUserByDID, getUserByAddress, addSubscriber, removeSubscriber } from '../../lib/threadDB';
 import './style.css';
 import { Button, Spinner, Note, Description, Input } from '@geist-ui/core';
 
-export const AccessControl = ({ wallet, ceramic, writer, authSig, handleRerender, handleMessage }) => {
+export const AccessControl = ({ wallet, ceramic, writer, authSig, user, handleRerender, handleMessage }) => {
   const [userHasDeployed, setUserHasDeployed] = useState(false);
   const [userDeployedContractAddress, setUserDeployedContractAddress] = useState('');
+  const [writerERC20, setWriterERC20] = useState();
   const [userTokenName, setUserTokenName] = useState('');
   const [userTokenSymbol, setUserTokenSymbol] = useState('');
   const [minTokenCount, setMinTokenCount] = useState('');
@@ -30,6 +32,7 @@ export const AccessControl = ({ wallet, ceramic, writer, authSig, handleRerender
           setUserDeployedContractAddress(deployedContractAddress);
 
           const writerERC20 = new ethers.Contract(deployedContractAddress, contractABI.writerERC20, wallet.signer);
+          setWriterERC20(writerERC20);
 
           const userTokenName = await writerERC20.name();
           setUserTokenName(userTokenName);
@@ -87,20 +90,6 @@ export const AccessControl = ({ wallet, ceramic, writer, authSig, handleRerender
           },
         ];
 
-        // const accessControlConditions = [
-        //   {
-        //     contractAddress: userDeployedContractAddress,
-        //     standardContractType: 'ERC20',
-        //     chain: 'mumbai',
-        //     method: 'balanceOf',
-        //     parameters: [':userAddress'],
-        //     returnValueTest: {
-        //       comparator: '>=',
-        //       value: newMinTokenCount,
-        //     },
-        //   },
-        // ];
-
         const writerData = await ceramic.store.get('writerData', ceramic.did);
 
         if (writerData !== undefined && writerData !== null) {
@@ -143,12 +132,26 @@ export const AccessControl = ({ wallet, ceramic, writer, authSig, handleRerender
 
         await ceramic.store.merge('writerData', { accessControlConditions: [unifiedAccessControlConditions] });
 
-        setMinTokenCountBtnLoading(false);
+        // if (user !== undefined) {
+        //   if (user.subscribedBy.length < 1) return;
+
+        //   await Promise.all(
+        //     user.subscribedBy.map(async (subscriberDID) => {
+        //       const subscriber = await getUserByDID(subscriberDID);
+        //       const subscriberBalanceOfWriterToken = await writerERC20.balanceOf(subscriber.address);
+        //       if (Number(subscriberBalanceOfWriterToken) < Number(newMinTokenCount)) {
+        //         await removeSubscriber(ceramic.did, subscriberDID);
+        //       }
+        //     })
+        //   );
+        // }
+
         handleMessage('success', 'New min no. of tokens required successfully updated.');
+        setMinTokenCountBtnLoading(false);
 
         setNewMinTokenCount('');
 
-        handleRerender(true)
+        handleRerender(true);
       }
     } catch (e) {
       console.log(e);

@@ -190,17 +190,11 @@ export const MyContract = ({ wallet, ceramic, writer, handleRerender, handleMess
           handleMessage('error', 'Transaction failed!');
         }
 
-        const loggedInUserBalanceOfWriterToken = await writerERC20.balanceOf(wallet.address);
         const transferToUserBalanceOfWriterToken = await writerERC20.balanceOf(transferAddress);
         const writerData = await ceramic.store.get('writerData', ceramic.did);
         if (writerData !== undefined && writerData !== null) {
           if (writerData.accessControlConditions[0] !== null) {
             const writerRequiredNoOfTokensToAccess = writerData.accessControlConditions[0][0].returnValueTest.value;
-            if (Number(loggedInUserBalanceOfWriterToken) >= Number(writerRequiredNoOfTokensToAccess)) {
-              await addSubscriber(ceramic.did, ceramic.did);
-            } else {
-              await removeSubscriber(ceramic.did, ceramic.did);
-            }
 
             const transferToUser = await getUserByAddress(transferAddress);
             if (Number(transferToUserBalanceOfWriterToken) >= Number(writerRequiredNoOfTokensToAccess)) {

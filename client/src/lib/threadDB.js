@@ -181,7 +181,7 @@ export const removeSubscriber = async (did, subscriberDID) => {
       if (subscriber.length < 1) return;
       let subscriberData = subscriber[0];
       if (subscriberData.subscribedTo.includes(did) === false) return;
-      subscriberData.subscribedTo = subscriberData.subscribedTo.filter((did) => did !== did);
+      subscriberData.subscribedTo = subscriberData.subscribedTo.filter((writerDID) => writerDID !== did);
       return await threadDBClient.save(threadID, 'Users', [subscriberData]);
     } else {
       throw new Error('ThreadDB credentials not found! Reconnect your wallet.');
