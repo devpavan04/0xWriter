@@ -16,10 +16,7 @@ import { Button, Card, Note, Text, Fieldset, useToasts } from '@geist-ui/core';
 import { ChevronsRight, ChevronsDown, Edit, Trash } from '@geist-ui/icons';
 
 export const Write = ({ wallet, ceramic, writer, authSig, handleRerender, handleMessage }) => {
-  const editorJS = useRef();
-
   const { setToast } = useToasts({ placement: 'bottomRight', padding: '1rem' });
-
   const [userHasDeployed, setUserHasDeployed] = useState(false);
   const [userAccessControlConditions, setUserAccessControlConditions] = useState();
   const [userEncryptedSymmetricKey, setUserEncryptedSymmetricKey] = useState();
@@ -29,6 +26,8 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleRerender, handle
   const [editorIsOpen, setEditorIsOpen] = useState(false);
   const [selectedPostToEditID, setSelectedPostToEditID] = useState();
   const [publishBtnLoading, setPublishBtnLoading] = useState(false);
+
+  const editorJS = useRef();
 
   const initializeEditor = (editorType, prevContent) => {
     const editor = new EditorJS({
@@ -40,6 +39,7 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleRerender, handle
       },
       onChange: async () => {
         let content = await editor.saver.save();
+        console.log(content);
         if (editorType === 'new') {
           window.localStorage.setItem(`editorDraft-new-${wallet.address}`, JSON.stringify(content));
         } else if (editorType === 'edit') {
@@ -65,7 +65,6 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleRerender, handle
     });
   };
 
-  // call this in the useEffect because, when reloaded user is started with new editor
   const openEditor = (editorType, content) => {
     setEditorIsOpen(true);
 
@@ -105,6 +104,46 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleRerender, handle
         window.localStorage.removeItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
         closeEditor();
       }
+    }
+  };
+
+  const resetEditor = () => {
+    let draft = window.localStorage.getItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
+
+    if (draft !== null) {
+      window.localStorage.removeItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
+    }
+
+    closeEditor();
+
+    editorJS.current.destroy();
+    editorJS.current = null;
+
+    const prevContentPost = userDecryptedPosts.filter((post) => post.id === Number(selectedPostToEditID));
+    const prevContentPostIndex = userDecryptedPosts.indexOf(prevContentPost[0]);
+
+    const content = userDecryptedPosts[prevContentPostIndex];
+
+    openEditor('edit', content);
+  };
+
+  const deletePostHandler = (post) =>
+    setToast({
+      text: 'Are you sure you want to delete the post?',
+      type: 'error',
+      actions: [{ name: 'Delete', handler: () => deletePost(post) }],
+    });
+
+  const handleEdit = async (post) => {
+    setSelectedPostToEditID(post.id);
+    openEditor('edit', post);
+  };
+
+  const handleFieldChange = (value) => {
+    if (value === 'New') {
+      // openEditor('new');
+    } else {
+      closeEditor();
     }
   };
 
@@ -192,11 +231,6 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleRerender, handle
     }
   };
 
-  const handleEdit = async (post) => {
-    setSelectedPostToEditID(post.id);
-    openEditor('edit', post);
-  };
-
   const deletePost = async (postToDelete) => {
     try {
       let draft = window.localStorage.getItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
@@ -234,41 +268,6 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleRerender, handle
       console.log(e);
 
       handleMessage('error', e.message);
-    }
-  };
-
-  const deletePostHandler = (post) =>
-    setToast({
-      text: 'Are you sure you want to delete the post?',
-      type: 'error',
-      actions: [{ name: 'Delete', handler: () => deletePost(post) }],
-    });
-
-  const resetEditor = () => {
-    let draft = window.localStorage.getItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
-
-    if (draft !== null) {
-      window.localStorage.removeItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
-    }
-
-    closeEditor();
-
-    editorJS.current.destroy();
-    editorJS.current = null;
-
-    const prevContentPost = userDecryptedPosts.filter((post) => post.id === Number(selectedPostToEditID));
-    const prevContentPostIndex = userDecryptedPosts.indexOf(prevContentPost[0]);
-
-    const content = userDecryptedPosts[prevContentPostIndex];
-
-    openEditor('edit', content);
-  };
-
-  const handleFieldChange = (value) => {
-    if (value === 'New') {
-      // openEditor('new');
-    } else {
-      closeEditor();
     }
   };
 

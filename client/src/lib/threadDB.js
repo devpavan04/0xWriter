@@ -1,4 +1,4 @@
-import { Client, Where, ThreadID } from '@textile/hub';
+import { Where } from '@textile/hub';
 import { getThreadDBCredentials } from '../utils/threadDB.js';
 
 export const registerUser = async (address, did) => {

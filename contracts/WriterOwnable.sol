@@ -14,6 +14,7 @@ contract WriterOwnable {
     }
 
     function transferOwnership(address _newOwner) public onlyOwner {
+        require(_newOwner != address(0), "Invalid address.");
         owner = _newOwner;
     }
 

@@ -9,8 +9,7 @@ import contractABI from './contracts/abi.json';
 import contractAddress from './contracts/address.json';
 import logo from './assets/logo/Group 19@3x.png';
 import './app.css';
-import { Button, Text, Note, useToasts, Tabs, Loading, Spacer, Page } from '@geist-ui/core';
-import { Feather } from '@geist-ui/icons';
+import { Button, Text, Note, useToasts, Tabs, Loading, Spacer } from '@geist-ui/core';
 import { Home } from './components/Home';
 import { Write } from './components/Write';
 import { MyContract } from './components/MyContract';
@@ -34,7 +33,6 @@ const App = () => {
   const [writer, setWriter] = useState();
   const [authSig, setAuthSig] = useState();
   const [litConnected, setLitConnected] = useState(false);
-
   const [rerender, setRerender] = useState(false);
 
   useEffect(() => {

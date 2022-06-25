@@ -5,22 +5,10 @@ import { Button, Text, Card, Note, Tag, Description, Modal, useModal, Input, Sni
 
 export const Home = ({ wallet, ceramic, handleRerender, handleMessage }) => {
   const { setVisible, bindings } = useModal();
-
   const [name, setName] = useState();
   const [description, setDescription] = useState();
   const [emoji, setEmoji] = useState();
   const [updateProfileBtnLoading, setUpdateProfileBtnLoading] = useState(false);
-
-  useEffect(() => {
-    function init() {
-      if (ceramic.basicProfile !== undefined && ceramic.basicProfile !== null) {
-        setName(ceramic.basicProfile.name);
-        setDescription(ceramic.basicProfile.description);
-        setEmoji(ceramic.basicProfile.emoji);
-      }
-    }
-    init();
-  }, []);
 
   const updateBasicProfile = async () => {
     try {
@@ -84,6 +72,17 @@ export const Home = ({ wallet, ceramic, handleRerender, handleMessage }) => {
       </Modal>
     );
   };
+
+  useEffect(() => {
+    function init() {
+      if (ceramic.basicProfile !== undefined && ceramic.basicProfile !== null) {
+        setName(ceramic.basicProfile.name);
+        setDescription(ceramic.basicProfile.description);
+        setEmoji(ceramic.basicProfile.emoji);
+      }
+    }
+    init();
+  }, []);
 
   return (
     <div className='home-content'>

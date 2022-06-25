@@ -20,32 +20,6 @@ export const WriterContract = ({ wallet, ceramic, writer, handleRerender, handle
   const [getAddressBtnLoading, setGetAddressBtnLoading] = useState(false);
   const [changeDeploymentFeeBtnLoading, setChangeDeploymentFeeBtnLoading] = useState(false);
 
-  useEffect(() => {
-    async function init() {
-      if (writer !== undefined) {
-        const writerContractAddress = await writer.address;
-        setWriterContractAddress(writerContractAddress);
-        const ownerAddress = await writer.owner();
-        setOwnerAddress(ownerAddress);
-        if (ownerAddress === wallet.address) setUserIsOwner(true);
-        const contractBalance = await writer.getContractBalance();
-        setContractBalance(ethers.utils.formatEther(contractBalance));
-        const deploymentFee = await writer.getDeploymentFee();
-        setDeploymentFee(ethers.utils.formatEther(deploymentFee));
-
-        const owner = await getUserByAddress(ownerAddress);
-        const ownerDID = owner.did;
-        setOwnerDID(ownerDID);
-
-        const ownerBasicProfile = await ceramic.store.get('basicProfile', owner.did);
-        if (ownerBasicProfile !== undefined && ownerBasicProfile !== null) {
-          setOwnerBasicProfile(ownerBasicProfile);
-        }
-      }
-    }
-    init();
-  }, [writer]);
-
   const withdrawBalance = async () => {
     try {
       setWithdrawBtnLoading(true);
@@ -132,6 +106,32 @@ export const WriterContract = ({ wallet, ceramic, writer, handleRerender, handle
       handleMessage('error', e.message);
     }
   };
+
+  useEffect(() => {
+    async function init() {
+      if (writer !== undefined) {
+        const writerContractAddress = await writer.address;
+        setWriterContractAddress(writerContractAddress);
+        const ownerAddress = await writer.owner();
+        setOwnerAddress(ownerAddress);
+        if (ownerAddress === wallet.address) setUserIsOwner(true);
+        const contractBalance = await writer.getContractBalance();
+        setContractBalance(ethers.utils.formatEther(contractBalance));
+        const deploymentFee = await writer.getDeploymentFee();
+        setDeploymentFee(ethers.utils.formatEther(deploymentFee));
+
+        const owner = await getUserByAddress(ownerAddress);
+        const ownerDID = owner.did;
+        setOwnerDID(ownerDID);
+
+        const ownerBasicProfile = await ceramic.store.get('basicProfile', owner.did);
+        if (ownerBasicProfile !== undefined && ownerBasicProfile !== null) {
+          setOwnerBasicProfile(ownerBasicProfile);
+        }
+      }
+    }
+    init();
+  }, [writer]);
 
   return (
     <div className='writer-contract-content'>

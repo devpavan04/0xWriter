@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import contractABI from '../../contracts/abi.json';
-import { getUsers, getUserByAddress, addSubscriber, removeSubscriber } from '../../lib/threadDB';
+import { getUserByAddress, addSubscriber, removeSubscriber } from '../../lib/threadDB';
 import './style.css';
 import { Button, Spacer, Spinner, Note, Tag, Description, Input, Link } from '@geist-ui/core';
 
@@ -29,40 +29,6 @@ export const MyContract = ({ wallet, ceramic, writer, handleRerender, handleMess
   const [transferBtnLoading, setTransferBtnLoading] = useState(false);
   const [changePriceBtnLoading, setChangePriceBtnLoading] = useState(false);
   const [withdrawBtnLoading, setWithdrawBtnLoading] = useState(false);
-
-  useEffect(() => {
-    async function init() {
-      if (writer !== undefined) {
-        const deploymentFee = await writer.getDeploymentFee();
-        setDeploymentFee(deploymentFee);
-
-        const userHasDeployed = await writer.getHasWriterDeployed(wallet.address);
-        if (userHasDeployed) {
-          setUserHasDeployed(true);
-
-          const deployedContractAddress = await writer.getWriterDeployedContractAddress(wallet.address);
-          setUserDeployedContractAddress(deployedContractAddress);
-
-          const writerERC20 = new ethers.Contract(deployedContractAddress, contractABI.writerERC20, wallet.signer);
-          setWriterERC20(writerERC20);
-
-          const userTokenName = await writerERC20.name();
-          setUserTokenName(userTokenName);
-          const userTokenSymbol = await writerERC20.symbol();
-          setUserTokenSymbol(userTokenSymbol);
-          const userTokenPrice = ethers.utils.formatEther(await writerERC20.getTokenPrice()) + ' MATIC';
-          setUserTokenPrice(userTokenPrice);
-          const userTokenTotalMinted = Number(await writerERC20.totalSupply());
-          setUserTokenTotalMinted(userTokenTotalMinted);
-          const userTokenContractBalance = ethers.utils.formatEther(await writerERC20.getContractBalance()) + ' MATIC';
-          setUserTokenContractBalance(userTokenContractBalance);
-          const userTokenBalance = Number(await writerERC20.balanceOf(wallet.address));
-          setUserTokenBalance(userTokenBalance);
-        }
-      }
-    }
-    init();
-  }, []);
 
   const deployWriterERC20Contract = async () => {
     try {
@@ -101,9 +67,7 @@ export const MyContract = ({ wallet, ceramic, writer, handleRerender, handleMess
         setTokenPrice('');
         setInitialMinit('');
 
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        handleRerender(true);
       }
     } catch (e) {
       console.log(e);
@@ -276,6 +240,40 @@ export const MyContract = ({ wallet, ceramic, writer, handleRerender, handleMess
       handleMessage('error', e.message);
     }
   };
+
+  useEffect(() => {
+    async function init() {
+      if (writer !== undefined) {
+        const deploymentFee = await writer.getDeploymentFee();
+        setDeploymentFee(deploymentFee);
+
+        const userHasDeployed = await writer.getHasWriterDeployed(wallet.address);
+        if (userHasDeployed) {
+          setUserHasDeployed(true);
+
+          const deployedContractAddress = await writer.getWriterDeployedContractAddress(wallet.address);
+          setUserDeployedContractAddress(deployedContractAddress);
+
+          const writerERC20 = new ethers.Contract(deployedContractAddress, contractABI.writerERC20, wallet.signer);
+          setWriterERC20(writerERC20);
+
+          const userTokenName = await writerERC20.name();
+          setUserTokenName(userTokenName);
+          const userTokenSymbol = await writerERC20.symbol();
+          setUserTokenSymbol(userTokenSymbol);
+          const userTokenPrice = ethers.utils.formatEther(await writerERC20.getTokenPrice()) + ' MATIC';
+          setUserTokenPrice(userTokenPrice);
+          const userTokenTotalMinted = Number(await writerERC20.totalSupply());
+          setUserTokenTotalMinted(userTokenTotalMinted);
+          const userTokenContractBalance = ethers.utils.formatEther(await writerERC20.getContractBalance()) + ' MATIC';
+          setUserTokenContractBalance(userTokenContractBalance);
+          const userTokenBalance = Number(await writerERC20.balanceOf(wallet.address));
+          setUserTokenBalance(userTokenBalance);
+        }
+      }
+    }
+    init();
+  }, []);
 
   return (
     <div className='contract-content'>

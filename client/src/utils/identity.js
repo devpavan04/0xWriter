@@ -1,6 +1,22 @@
 import { PrivateKey } from '@textile/hub';
 import { ethers } from 'ethers';
 
+const generateMessageForEntropy = (ethereumAddress, applicationName) => {
+  return (
+    'Welcome to 0xWriter! \n' +
+    '\n' +
+    'The Ethereum address used by this application is: \n' +
+    ethereumAddress +
+    '\n' +
+    '\n' +
+    'By signing this message, you authorize the current application to use the following app associated with the above address: \n' +
+    applicationName +
+    '\n' +
+    '\n' +
+    'Your authentication status will be reset after 2 hours.'
+  );
+};
+
 export const getIdentity = async (signer, address) => {
   try {
     let signedText;
@@ -24,8 +40,4 @@ export const getIdentity = async (signer, address) => {
 
     throw new Error(e.message);
   }
-};
-
-const generateMessageForEntropy = (ethereumAddress, applicationName) => {
-  return `Sign message with ${ethereumAddress} to use ${applicationName}.`;
 };

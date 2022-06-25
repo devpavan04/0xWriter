@@ -21,40 +21,6 @@ export const AccessControl = ({ wallet, ceramic, writer, authSig, user, handleRe
   const [newMinTokenCount, setNewMinTokenCount] = useState('');
   const [minTokenCountBtnLoading, setMinTokenCountBtnLoading] = useState(false);
 
-  useEffect(() => {
-    async function init() {
-      if (writer !== undefined) {
-        const userHasDeployed = await writer.getHasWriterDeployed(wallet.address);
-        if (userHasDeployed) {
-          setUserHasDeployed(true);
-
-          const deployedContractAddress = await writer.getWriterDeployedContractAddress(wallet.address);
-          setUserDeployedContractAddress(deployedContractAddress);
-
-          const writerERC20 = new ethers.Contract(deployedContractAddress, contractABI.writerERC20, wallet.signer);
-          setWriterERC20(writerERC20);
-
-          const userTokenName = await writerERC20.name();
-          setUserTokenName(userTokenName);
-
-          const userTokenSymbol = await writerERC20.symbol();
-          setUserTokenSymbol(userTokenSymbol);
-
-          const writerData = await ceramic.store.get('writerData', ceramic.did);
-
-          if (writerData !== undefined && writerData !== null) {
-            const accessControlConditions = writerData.accessControlConditions[0];
-            const minTokenCount = accessControlConditions[0].returnValueTest.value;
-            setMinTokenCount(minTokenCount);
-          } else {
-            setMinTokenCount('not set');
-          }
-        }
-      }
-    }
-    init();
-  }, [writer]);
-
   const setMinNoOfTokensCount = async () => {
     try {
       if (!newMinTokenCount) {
@@ -160,6 +126,40 @@ export const AccessControl = ({ wallet, ceramic, writer, authSig, user, handleRe
       handleMessage('error', e.message);
     }
   };
+
+  useEffect(() => {
+    async function init() {
+      if (writer !== undefined) {
+        const userHasDeployed = await writer.getHasWriterDeployed(wallet.address);
+        if (userHasDeployed) {
+          setUserHasDeployed(true);
+
+          const deployedContractAddress = await writer.getWriterDeployedContractAddress(wallet.address);
+          setUserDeployedContractAddress(deployedContractAddress);
+
+          const writerERC20 = new ethers.Contract(deployedContractAddress, contractABI.writerERC20, wallet.signer);
+          setWriterERC20(writerERC20);
+
+          const userTokenName = await writerERC20.name();
+          setUserTokenName(userTokenName);
+
+          const userTokenSymbol = await writerERC20.symbol();
+          setUserTokenSymbol(userTokenSymbol);
+
+          const writerData = await ceramic.store.get('writerData', ceramic.did);
+
+          if (writerData !== undefined && writerData !== null) {
+            const accessControlConditions = writerData.accessControlConditions[0];
+            const minTokenCount = accessControlConditions[0].returnValueTest.value;
+            setMinTokenCount(minTokenCount);
+          } else {
+            setMinTokenCount('not set');
+          }
+        }
+      }
+    }
+    init();
+  }, [writer]);
 
   return (
     <div className='access-control-content'>

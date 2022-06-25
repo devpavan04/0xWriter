@@ -20,7 +20,6 @@ contract WriterERC20 is ERC20, WriterOwnable {
 
     receive() external payable {}
 
-    // getters
     function getContractBalance() public view returns (uint256) {
         return address(this).balance;
     }
@@ -29,12 +28,10 @@ contract WriterERC20 is ERC20, WriterOwnable {
         return tokenPrice;
     }
 
-    // setters
     function setTokenPrice(uint256 _newTokenPrice) public onlyOwner {
         tokenPrice = _newTokenPrice;
     }
 
-    // main
     function mint(uint256 _amount) public payable {
         uint256 totalTokenPrice = tokenPrice * _amount;
         require(

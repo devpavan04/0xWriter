@@ -7,8 +7,6 @@ async function main() {
   const deployer = await hre.ethers.getSigner();
   const deployerAddress = await deployer.getAddress();
 
-  console.log(deployerAddress);
-
   const Writer = await hre.ethers.getContractFactory('Writer');
   const writer = await Writer.deploy(hre.ethers.utils.parseEther('0.001'), deployerAddress);
 

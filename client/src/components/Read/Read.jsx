@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import Identicon from 'react-identicons';
 import contractABI from '../../contracts/abi.json';
-import { getUserByDID, getUserByAddress, addSubscriber, removeSubscriber } from '../../lib/threadDB';
+import { getUserByDID, addSubscriber, removeSubscriber } from '../../lib/threadDB';
 import { encryptedPostsBase64ToBlob, decryptPostsWithLit } from '../../lib/lit';
 import { convertCleanDataToHTML, convertToDate } from '../../utils/markup-parser';
 import './style.css';
@@ -19,7 +19,6 @@ import {
   Card,
   Tag,
   Note,
-  Modal,
   Breadcrumbs,
 } from '@geist-ui/core';
 
@@ -28,27 +27,19 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
   const [subscribedToWriters, setSubscribedToWriters] = useState([]);
   const [myWriting, setMyWriting] = useState([]);
   const [mySubscribers, setMySubscribers] = useState([]);
-
   const [showWritersPage, setShowWritersPage] = useState(true);
   const [showProfilePage, setShowProfilePage] = useState(false);
   const [showContractPage, setShowContractPage] = useState(false);
   const [showReadPage, setShowReadPage] = useState(false);
-
   const [currentProfile, setCurrentProfile] = useState();
-
   const [currentProfileDecryptedPosts, setCurrentProfileDecryptedPosts] = useState([]);
-
   const [newMint, setNewMint] = useState();
   const [mintBtnLoading, setMintBtnLoading] = useState(false);
-
   const [transferAddress, setTransferAddress] = useState();
   const [transferAmount, setTransferAmount] = useState();
   const [transferBtnLoading, setTransferBtnLoading] = useState(false);
-
   const [currentField, setCurrentField] = useState('All Writers');
-
   const [loggedInUserIsAWriter, setLoggedInUserIsAWriter] = useState(false);
-
   const [showInfo, setShowInfo] = useState(false);
   const [postsLoading, setPostsLoading] = useState(false);
 
@@ -86,43 +77,6 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
     setShowReadPage(true);
 
     await readBlog(writer);
-  };
-
-  const readBlog = async (writer) => {
-    try {
-      setCurrentProfileDecryptedPosts([]);
-      setShowInfo(false);
-      setPostsLoading(true);
-
-      if (writer.accessControlConditions && writer.encryptedSymmetricKey && writer.encryptedPosts) {
-        if (
-          writer.encryptedPosts !== null &&
-          writer.encryptedSymmetricKey !== null &&
-          writer.accessControlConditions !== null
-        ) {
-          const encryptedPostsBlob = encryptedPostsBase64ToBlob(writer.encryptedPosts);
-          const writerDecryptedPosts = await decryptPostsWithLit(
-            encryptedPostsBlob,
-            writer.encryptedSymmetricKey,
-            writer.accessControlConditions,
-            authSig
-          );
-          setCurrentProfileDecryptedPosts(JSON.parse(writerDecryptedPosts.decryptedPosts));
-          setShowInfo(true);
-          setPostsLoading(false);
-        }
-      }
-    } catch (e) {
-      console.log(e);
-
-      if (e.message === 'not_authorized') {
-        setPostsLoading(false);
-        const res = alert('You need to subscribe to the writer to view the content.');
-        if (res === undefined) {
-          handleShowProfilePage(currentProfile);
-        }
-      }
-    }
   };
 
   const handleFieldChange = (value) => {
@@ -237,124 +191,42 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
     }
   };
 
-  useEffect(() => {
-    async function init() {
-      if (writer !== undefined && users !== undefined) {
-        const writerUsers = users.filter(
-          (user) => user.deployedContractAddress !== '' && user.deployedContractAddress !== ethers.constants.AddressZero
-        );
+  const readBlog = async (writer) => {
+    try {
+      setCurrentProfileDecryptedPosts([]);
+      setShowInfo(false);
+      setPostsLoading(true);
 
-        const allWriters = await Promise.all(
-          writerUsers.map(async (writerUser) => {
-            const writerData = await ceramic.store.get('writerData', writerUser.did);
-
-            if (writerData !== undefined && writerData !== null) {
-              if (writerData.accessControlConditions !== undefined && writerData.accessControlConditions[0] !== null) {
-                let userData = {
-                  address: writerUser.address,
-                  did: writerUser.did,
-                  contractAddress: writerUser.deployedContractAddress,
-                };
-
-                if (writerUser.address === wallet.address) {
-                  setLoggedInUserIsAWriter(true);
-                }
-
-                if (writerData.encryptedPosts !== undefined && writerData.encryptedPosts[0] !== null) {
-                  userData.encryptedPosts = writerData.encryptedPosts[0];
-                }
-
-                if (writerData.encryptedSymmetricKey !== undefined && writerData.encryptedSymmetricKey[0] !== null) {
-                  userData.encryptedSymmetricKey = writerData.encryptedSymmetricKey[0];
-                }
-
-                userData.accessControlConditions = writerData.accessControlConditions[0];
-
-                const basicProfile = await ceramic.store.get('basicProfile', writerUser.did);
-                if (basicProfile !== undefined && basicProfile !== null) {
-                  userData.name = basicProfile.name;
-                  userData.description = basicProfile.description;
-                  userData.emoji = basicProfile.emoji;
-                }
-
-                const writerERC20 = new ethers.Contract(
-                  writerUser.deployedContractAddress,
-                  contractABI.writerERC20,
-                  wallet.signer
-                );
-                userData.writerERC20 = writerERC20;
-
-                userData.tokenName = await writerERC20.name();
-                userData.tokenSymbol = await writerERC20.symbol();
-                userData.tokenPrice = ethers.utils.formatEther(await writerERC20.getTokenPrice());
-
-                const loggedInUserBalanceOfWriterToken = await writerERC20.balanceOf(wallet.address);
-                userData.loggedInUserBalanceOfWriterToken = Number(loggedInUserBalanceOfWriterToken);
-
-                const writerRequiredNoOfTokensToAccess = writerData.accessControlConditions[0][0].returnValueTest.value;
-                userData.writerRequiredNoOfTokensToAccess = Number(writerRequiredNoOfTokensToAccess);
-
-                if (Number(loggedInUserBalanceOfWriterToken) >= Number(writerRequiredNoOfTokensToAccess)) {
-                  await addSubscriber(writerUser.did, ceramic.did);
-                  if (writerUser.did === ceramic.did) {
-                    userData.loggedInUserIsSubscribed = 'owner';
-                  } else {
-                    userData.loggedInUserIsSubscribed = 'yes';
-                  }
-                } else {
-                  await removeSubscriber(writerUser.did, ceramic.did);
-                  userData.loggedInUserIsSubscribed = 'no';
-                }
-
-                const updatedWriterUser = await getUserByDID(writerUser.did);
-
-                userData.totalSubscribedBy = updatedWriterUser.subscribedBy.length;
-                userData.totalSubscribedTo = updatedWriterUser.subscribedTo.length;
-                userData.subscribedBy = updatedWriterUser.subscribedBy;
-                userData.subscribedTo = updatedWriterUser.subscribedTo;
-
-                return userData;
-              }
-            }
-          })
-        );
-
-        setAllWriters(allWriters);
-
-        const subscribedToWriters = allWriters.filter((writer) =>
-          writer !== undefined ? writer.subscribedBy.includes(ceramic.did) : null
-        );
-        setSubscribedToWriters(subscribedToWriters);
-
-        const myWriting = allWriters.filter((writer) => (writer !== undefined ? writer.did === ceramic.did : null));
-        setMyWriting(myWriting);
-
-        if (myWriting[0]) {
-          const mySubscribers = await Promise.all(
-            myWriting[0].subscribedBy.map(async (did) => {
-              let subscriberData = {
-                did: did,
-              };
-
-              const user = await getUserByDID(did);
-              subscriberData.address = user.address;
-
-              const basicProfile = await ceramic.store.get('basicProfile', did);
-              if (basicProfile !== undefined && basicProfile !== null) {
-                subscriberData.name = basicProfile.name;
-                subscriberData.description = basicProfile.description;
-                subscriberData.emoji = basicProfile.emoji;
-              }
-
-              return subscriberData;
-            })
+      if (writer.accessControlConditions && writer.encryptedSymmetricKey && writer.encryptedPosts) {
+        if (
+          writer.encryptedPosts !== null &&
+          writer.encryptedSymmetricKey !== null &&
+          writer.accessControlConditions !== null
+        ) {
+          const encryptedPostsBlob = encryptedPostsBase64ToBlob(writer.encryptedPosts);
+          const writerDecryptedPosts = await decryptPostsWithLit(
+            encryptedPostsBlob,
+            writer.encryptedSymmetricKey,
+            writer.accessControlConditions,
+            authSig
           );
-          setMySubscribers(mySubscribers);
+          setCurrentProfileDecryptedPosts(JSON.parse(writerDecryptedPosts.decryptedPosts));
+          setShowInfo(true);
+          setPostsLoading(false);
+        }
+      }
+    } catch (e) {
+      console.log(e);
+
+      if (e.message === 'not_authorized') {
+        setPostsLoading(false);
+        const res = alert('You are not authorized to access this content.');
+        if (res === undefined) {
+          handleShowProfilePage(currentProfile);
         }
       }
     }
-    init();
-  }, [writer, users, currentProfile]);
+  };
 
   const renderWriters = (writersArray) => {
     return (
@@ -730,6 +602,125 @@ export const Read = ({ wallet, ceramic, writer, authSig, users, handleRerender, 
       </>
     );
   };
+
+  useEffect(() => {
+    async function init() {
+      if (writer !== undefined && users !== undefined) {
+        const writerUsers = users.filter(
+          (user) => user.deployedContractAddress !== '' && user.deployedContractAddress !== ethers.constants.AddressZero
+        );
+
+        const allWriters = await Promise.all(
+          writerUsers.map(async (writerUser) => {
+            const writerData = await ceramic.store.get('writerData', writerUser.did);
+
+            if (writerData !== undefined && writerData !== null) {
+              if (writerData.accessControlConditions !== undefined && writerData.accessControlConditions[0] !== null) {
+                let userData = {
+                  address: writerUser.address,
+                  did: writerUser.did,
+                  contractAddress: writerUser.deployedContractAddress,
+                };
+
+                if (writerUser.address === wallet.address) {
+                  setLoggedInUserIsAWriter(true);
+                }
+
+                if (writerData.encryptedPosts !== undefined && writerData.encryptedPosts[0] !== null) {
+                  userData.encryptedPosts = writerData.encryptedPosts[0];
+                }
+
+                if (writerData.encryptedSymmetricKey !== undefined && writerData.encryptedSymmetricKey[0] !== null) {
+                  userData.encryptedSymmetricKey = writerData.encryptedSymmetricKey[0];
+                }
+
+                userData.accessControlConditions = writerData.accessControlConditions[0];
+
+                const basicProfile = await ceramic.store.get('basicProfile', writerUser.did);
+                if (basicProfile !== undefined && basicProfile !== null) {
+                  userData.name = basicProfile.name;
+                  userData.description = basicProfile.description;
+                  userData.emoji = basicProfile.emoji;
+                }
+
+                const writerERC20 = new ethers.Contract(
+                  writerUser.deployedContractAddress,
+                  contractABI.writerERC20,
+                  wallet.signer
+                );
+                userData.writerERC20 = writerERC20;
+
+                userData.tokenName = await writerERC20.name();
+                userData.tokenSymbol = await writerERC20.symbol();
+                userData.tokenPrice = ethers.utils.formatEther(await writerERC20.getTokenPrice());
+
+                const loggedInUserBalanceOfWriterToken = await writerERC20.balanceOf(wallet.address);
+                userData.loggedInUserBalanceOfWriterToken = Number(loggedInUserBalanceOfWriterToken);
+
+                const writerRequiredNoOfTokensToAccess = writerData.accessControlConditions[0][0].returnValueTest.value;
+                userData.writerRequiredNoOfTokensToAccess = Number(writerRequiredNoOfTokensToAccess);
+
+                if (Number(loggedInUserBalanceOfWriterToken) >= Number(writerRequiredNoOfTokensToAccess)) {
+                  await addSubscriber(writerUser.did, ceramic.did);
+                  if (writerUser.did === ceramic.did) {
+                    userData.loggedInUserIsSubscribed = 'owner';
+                  } else {
+                    userData.loggedInUserIsSubscribed = 'yes';
+                  }
+                } else {
+                  await removeSubscriber(writerUser.did, ceramic.did);
+                  userData.loggedInUserIsSubscribed = 'no';
+                }
+
+                const updatedWriterUser = await getUserByDID(writerUser.did);
+
+                userData.totalSubscribedBy = updatedWriterUser.subscribedBy.length;
+                userData.totalSubscribedTo = updatedWriterUser.subscribedTo.length;
+                userData.subscribedBy = updatedWriterUser.subscribedBy;
+                userData.subscribedTo = updatedWriterUser.subscribedTo;
+
+                return userData;
+              }
+            }
+          })
+        );
+
+        setAllWriters(allWriters);
+
+        const subscribedToWriters = allWriters.filter((writer) =>
+          writer !== undefined ? writer.subscribedBy.includes(ceramic.did) : null
+        );
+        setSubscribedToWriters(subscribedToWriters);
+
+        const myWriting = allWriters.filter((writer) => (writer !== undefined ? writer.did === ceramic.did : null));
+        setMyWriting(myWriting);
+
+        if (myWriting[0]) {
+          const mySubscribers = await Promise.all(
+            myWriting[0].subscribedBy.map(async (did) => {
+              let subscriberData = {
+                did: did,
+              };
+
+              const user = await getUserByDID(did);
+              subscriberData.address = user.address;
+
+              const basicProfile = await ceramic.store.get('basicProfile', did);
+              if (basicProfile !== undefined && basicProfile !== null) {
+                subscriberData.name = basicProfile.name;
+                subscriberData.description = basicProfile.description;
+                subscriberData.emoji = basicProfile.emoji;
+              }
+
+              return subscriberData;
+            })
+          );
+          setMySubscribers(mySubscribers);
+        }
+      }
+    }
+    init();
+  }, [writer, users, currentProfile]);
 
   return (
     <div className='writers'>

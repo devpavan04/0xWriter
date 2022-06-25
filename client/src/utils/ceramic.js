@@ -8,13 +8,12 @@ import { DIDDataStore } from '@glazed/did-datastore';
 import modelAliases from '../model/model.json';
 
 const threeID = new ThreeIdConnect();
-const CERAMIC_URL = 'http://localhost:7007';
 
 export const connectCeramic = async (provider, address) => {
   try {
     const authProvider = new EthereumAuthProvider(provider, address);
     await threeID.connect(authProvider);
-    const ceramic = new CeramicClient(CERAMIC_URL);
+    const ceramic = new CeramicClient(process.env.REACT_APP_CERAMIC_URL);
     const did = new DID({
       provider: threeID.getDidProvider(),
       resolver: {
