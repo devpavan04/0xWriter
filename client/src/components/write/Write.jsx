@@ -233,6 +233,8 @@ export const Write = ({ wallet, ceramic, writer, authSig, handleRerender, handle
 
   const deletePost = async (postToDelete) => {
     try {
+      handleMessage('success', 'Deleting post...');
+
       let draft = window.localStorage.getItem(`editorDraft-${selectedPostToEditID}-${wallet.address}`);
 
       if (draft !== null) {

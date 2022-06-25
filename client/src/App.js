@@ -170,7 +170,7 @@ const App = () => {
           </Note>
         ) : !ceramicConnected ? (
           <Loading type='secondary' spaceRatio={2.5} marginTop='1rem'>
-            Connecting to ceramic
+            Connecting to ceramic network
           </Loading>
         ) : !threadDBConnected ? (
           <Loading type='secondary' spaceRatio={2.5} marginTop='1rem'>
