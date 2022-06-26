@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="200" src="https://0xwriter.xyz/static/media/Group%2019@3x.0d91ea83.png">
+  <img width="200" src="./client/src/assets/logo/Group 19@3x.png">
 </p>
 
 <p align="center"><a href="https://0xwriter.xyz" target="_blank">Launch App</a></p>
