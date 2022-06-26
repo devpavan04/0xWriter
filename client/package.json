@@ -2,6 +2,7 @@
   "name": "0xwriter",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://devpavan04.github.io/0xWriter",
   "dependencies": {
     "@3id/connect": "^0.4.1",
     "@ceramicnetwork/3id-did-resolver": "^2.0.0",
@@ -38,7 +39,9 @@
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
-    "eject": "react-app-rewired eject"
+    "eject": "react-app-rewired eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [
@@ -52,6 +55,7 @@
     "not op_mini all"
   ],
   "devDependencies": {
+    "gh-pages": "^4.0.0",
     "react-app-rewired": "^2.2.1"
   }
 }
