@@ -6,7 +6,7 @@
 
 <hr />
 
-A decentralized blogging app that facilitates writers to write user centric data (blog) and to create token gated access to their content.
+A decentralized blogging app that facilitates writers to write user centric blog posts and to create token gated access to their content.
 
 This project was submitted at [Encode x Polygon Hackathon 2022](https://www.encode.club/polygon-hackathon)
 
