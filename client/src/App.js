@@ -163,6 +163,11 @@ const App = () => {
               <Text b>Welcome to 0xWriter 👋</Text>
               <Text>Connect your wallet to get started!</Text>
             </Note>
+            <Spacer />
+            <Note>
+              On initial few logins the data might not load or take longer than usual which is mostly because of ceramic
+              stream not loading. If encountered such thing, disconnect and reconnect your wallet along with refreshing the app couple of times. THIS WILL BE FIXED SOON!
+            </Note>
           </>
         ) : wallet.chainID !== 80001 ? (
           <Note width='fit-content' margin='auto' marginTop='1rem' label='Note '>
