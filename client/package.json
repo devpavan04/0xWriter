@@ -2,7 +2,7 @@
   "name": "0xwriter",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://devpavan04.github.io/0xWriter",
+  "homepage": "https://0xWriter.xyz",
   "dependencies": {
     "@3id/connect": "^0.4.1",
     "@ceramicnetwork/3id-did-resolver": "^2.0.0",
