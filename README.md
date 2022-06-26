@@ -113,4 +113,4 @@ Read more on how the above technologies are used in the app [here](https://glory
 
 ## Author
 
-- [@pavansoratur](https://github.com/devpavan04)
+[@pavansoratur](https://github.com/devpavan04)
