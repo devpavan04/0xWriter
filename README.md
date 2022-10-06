@@ -2,7 +2,11 @@
   <img width="200" src="./client/src/assets/logo/Group 19@3x.png">
 </p>
 
-<p align="center"><a href="https://0xwriter.xyz" target="_blank">Launch App</a></p>
+<p align="center">
+  <a href="https://0xwriter.xyz" target="_blank">Launch App</a>
+  🔏
+  <a href="https://youtu.be/ZXcJMdZ59NE" target="_blank">Watch Demo</a>
+</p>
 
 <hr />
 
